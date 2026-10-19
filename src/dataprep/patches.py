@@ -339,10 +339,14 @@ def download_one(p):
             "cleared_px": int((label == 1).sum()), "valid_px": int((label != 255).sum())}
 
 
-def run_downloads(df, limit=0):
-    PATCH_DIR.mkdir(parents=True, exist_ok=True)
+def run_downloads(df, limit=0, worker=None, out_dir=None, log_csv=None):
+    """Download the patches in df in parallel. worker/out_dir/log_csv default to the labeled set."""
+    worker = worker or download_one
+    out_dir = out_dir or PATCH_DIR
+    log_csv = log_csv or LOG_CSV
+    out_dir.mkdir(parents=True, exist_ok=True)
     todo = [p for p in df.itertuples(index=False)
-            if not (PATCH_DIR / f"{p.patch_id}.npz").exists()]
+            if not (out_dir / f"{p.patch_id}.npz").exists()]
     remaining = len(todo)
     # Shuffle (reproducibly) so that a partial run is a balanced mix of regions and splits
     order = np.random.default_rng(SEED).permutation(len(todo))
@@ -357,7 +361,7 @@ def run_downloads(df, limit=0):
     results, failed = [], []
     t_start = time.time()
     pool = cf.ThreadPoolExecutor(max_workers=WORKERS)
-    futures = {pool.submit(download_one, p): p.patch_id for p in todo}
+    futures = {pool.submit(worker, p): p.patch_id for p in todo}
     pending, i = set(futures), 0
     try:
         while pending:
@@ -385,11 +389,12 @@ def run_downloads(df, limit=0):
 
     if results:
         log = pd.DataFrame(results)
-        log.to_csv(LOG_CSV, mode="a", header=not LOG_CSV.exists(), index=False)
+        log.to_csv(log_csv, mode="a", header=not log_csv.exists(), index=False)
         print(f"\nwall time: {(time.time() - t_start) / 60:.1f} min for {len(results)} patches")
         print(f"mean seconds per patch (single request): {log.seconds.mean():.1f}")
         print(f"mean file size: {log.MB.mean():.2f} MB")
-        print(f"mean no-data fraction: 2024 {log.post_nodata.mean():.2%}, 2019 {log.pre_nodata.mean():.2%}")
+        for col in [c for c in log.columns if c.endswith("nodata")]:
+            print(f"mean {col} fraction: {log[col].mean():.2%}")
     if failed:
         print(f"\n{len(failed)} patches failed. Run the same command again to retry only those.")
 
