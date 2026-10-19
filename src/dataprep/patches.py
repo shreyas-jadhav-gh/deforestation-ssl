@@ -8,6 +8,8 @@ Run from the repository root with the 'defor' environment active:
     python src/dataprep/patches.py preview    # 3. save PNG previews of downloaded patches
     python src/dataprep/patches.py download   # 4. download every selected patch
     python src/dataprep/patches.py download --limit 400   # ...or only the next 400 of them
+    python src/dataprep/patches.py summary    # 5. check files, write dataset index and band statistics
+    python src/dataprep/patches.py repair     #    re-fetch only files that 'summary' found broken
 
 Downloads can be stopped with Ctrl+C and resumed by running the same command again:
 patches already on disk are skipped.
@@ -438,6 +440,123 @@ def cmd_preview(limit):
 
 
 # -----------------------------------------------------------------------------
+# Step 5: check every downloaded file, summarise the dataset, compute band statistics
+# -----------------------------------------------------------------------------
+DATASET_CSV = MANIFEST_DIR / "patches_downloaded.csv"
+BAND_STATS_JSON = MANIFEST_DIR / "band_stats.json"
+STATS_STEP = 4  # use every 4th row and column (1/16 of pixels) for band statistics
+
+
+def check_one(path, want_stats):
+    try:
+        with np.load(path) as d:
+            post, pre, label = d["post"], d["pre"], d["label"]
+        shapes_ok = (post.shape == (len(BANDS), PATCH_PX, PATCH_PX) and post.dtype == np.uint16 and
+                     pre.shape == (len(BANDS), PATCH_PX, PATCH_PX) and pre.dtype == np.uint16 and
+                     label.shape == (PATCH_PX, PATCH_PX) and label.dtype == np.uint8)
+        values_ok = bool(np.isin(label, (0, 1, 255)).all())
+        row = {"patch_id": path.stem, "ok": shapes_ok and values_ok, "error": "",
+               "forest_px": int((label == 0).sum()), "cleared_px": int((label == 1).sum()),
+               "ignore_px": int((label == 255).sum()),
+               "post_nodata_px": int((post == 0).all(axis=0).sum()),
+               "pre_nodata_px": int((pre == 0).all(axis=0).sum()),
+               "MB": path.stat().st_size / 1e6}
+        sums = None
+        if want_stats and row["ok"]:
+            sums = {}
+            for name, img in (("post", post), ("pre", pre)):
+                x = img[:, ::STATS_STEP, ::STATS_STEP].reshape(len(BANDS), -1).astype(np.float64)
+                x = x[:, (x > 0).any(axis=0)]          # drop no-data pixels
+                sums[name] = (x.shape[1], x.sum(axis=1), (x ** 2).sum(axis=1))
+        return row, sums
+    except Exception as e:  # unreadable or truncated file
+        return {"patch_id": path.stem, "ok": False, "error": str(e)[:200]}, None
+
+
+def cmd_summary():
+    import json
+
+    manifest = pd.read_csv(GRID_CSV).set_index("patch_id")
+    files = [f for f in sorted(PATCH_DIR.glob("*.npz")) if not f.name.endswith(".tmp.npz")]
+    print(f"checking {len(files)} files...")
+    split_of = manifest.split.to_dict()
+    region_of = manifest.region.to_dict()
+    is_train = {pid for pid in manifest.index
+                if region_of[pid] == "amazon" and split_of[pid] == "train"}
+
+    rows, totals = [], {}
+    with cf.ThreadPoolExecutor(max_workers=WORKERS) as pool:
+        for row, sums in pool.map(lambda f: check_one(f, f.stem in is_train), files):
+            rows.append(row)
+            if sums:
+                for name, (n, s, s2) in sums.items():
+                    t = totals.setdefault(name, [0, np.zeros(len(BANDS)), np.zeros(len(BANDS))])
+                    t[0] += n
+                    t[1] += s
+                    t[2] += s2
+    df = pd.DataFrame(rows)
+
+    bad = df[~df.ok]
+    unknown = df[~df.patch_id.isin(manifest.index)]
+    df = df[df.ok & df.patch_id.isin(manifest.index)].copy()
+    df["region"] = df.patch_id.map(region_of)
+    df["split"] = df.patch_id.map(split_of)
+    df["selected"] = df.patch_id.map(manifest.selected.to_dict()).astype(bool)
+    df = df[df.selected]
+    count_cols = ["forest_px", "cleared_px", "ignore_px", "post_nodata_px", "pre_nodata_px"]
+    df[count_cols] = df[count_cols].astype(int)
+
+    print("\nregion  split   patches  cleared share (of valid px)  valid px  2024 no-data  size GB")
+    for (region, split), g in df.groupby(["region", "split"]):
+        valid = g.forest_px.sum() + g.cleared_px.sum()
+        total = len(g) * PATCH_PX * PATCH_PX
+        print(f"{region:7s} {split:5s} {len(g):8d} {g.cleared_px.sum() / max(valid, 1):22.1%} "
+              f"{valid / total:15.1%} {g.post_nodata_px.sum() / total:12.2%} {g.MB.sum() / 1e3:8.2f}")
+    print(f"\ntotal: {len(df)} patches, {df.MB.sum() / 1e3:.2f} GB")
+    no_valid = int(((df.forest_px + df.cleared_px) == 0).sum())
+    print(f"patches with no valid label pixels: {no_valid}")
+    print(f"unreadable or malformed files: {len(bad)}")
+    for r in bad.itertuples():
+        print(f"  {r.patch_id}: {r.error or 'wrong shape, dtype or label values'}")
+        src = PATCH_DIR / f"{r.patch_id}.npz"
+        os.replace(src, src.with_name(src.name + ".bad"))   # set aside so 'download' fetches it again
+    if len(bad):
+        print("  these were renamed to .npz.bad. Re-fetch only them with:  "
+              "python src/dataprep/patches.py repair   (then run 'summary' again)")
+    if len(unknown):
+        print(f"files not in the manifest (ignored): {len(unknown)}")
+
+    keep = ["patch_id", "region", "split", "forest_px", "cleared_px", "ignore_px",
+            "post_nodata_px", "pre_nodata_px"]
+    df[keep].sort_values("patch_id").to_csv(DATASET_CSV, index=False)
+    print(f"\nsaved dataset index: {DATASET_CSV}")
+
+    if totals:
+        stats = {"bands": BANDS, "source": "amazon train split, every 4th pixel, no-data excluded"}
+        for name, (n, s, s2) in totals.items():
+            mean = s / n
+            std = np.sqrt(np.maximum(s2 / n - mean ** 2, 0))
+            stats[name] = {"mean": [round(float(v), 2) for v in mean],
+                           "std": [round(float(v), 2) for v in std], "pixels": int(n)}
+        BAND_STATS_JSON.write_text(json.dumps(stats, indent=2))
+        print(f"saved band statistics (for normalisation): {BAND_STATS_JSON}")
+        print("2024 band means:", dict(zip(BANDS, [round(v) for v in stats["post"]["mean"]])))
+
+
+def cmd_repair():
+    """Re-download only the patches that 'summary' set aside as .npz.bad."""
+    bad_ids = [f.name[:-len(".npz.bad")] for f in PATCH_DIR.glob("*.npz.bad")]
+    if not bad_ids:
+        print("nothing to repair")
+        return
+    manifest = pd.read_csv(GRID_CSV)
+    run_downloads(manifest[manifest.patch_id.isin(bad_ids)])
+    for pid in bad_ids:
+        if (PATCH_DIR / f"{pid}.npz").exists():
+            (PATCH_DIR / f"{pid}.npz.bad").unlink()
+
+
+# -----------------------------------------------------------------------------
 def main():
     parser = argparse.ArgumentParser(description="Patch grid and downloads")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -448,6 +567,8 @@ def main():
                     help="only download this many of the remaining patches (a balanced random mix)")
     pv = sub.add_parser("preview", help="save PNG previews of downloaded patches")
     pv.add_argument("--limit", type=int, default=0, help="only preview the first N patches")
+    sub.add_parser("summary", help="check downloaded files, summarise the dataset, compute band statistics")
+    sub.add_parser("repair", help="re-download only the files that 'summary' found broken")
     args = parser.parse_args()
 
     if args.command == "grid":
@@ -458,6 +579,10 @@ def main():
         run_downloads(load_manifest("selected"), limit=args.limit)
     elif args.command == "preview":
         cmd_preview(args.limit)
+    elif args.command == "summary":
+        cmd_summary()
+    elif args.command == "repair":
+        cmd_repair()
 
 
 if __name__ == "__main__":
