@@ -16,8 +16,10 @@ Examples (from the repository root):
     python src/train_seg.py --inits scratch --fracs 0.05 --seeds 0 --steps 30 --eval-every 15 \
         --batch-size 4 --max-patches 24 --tag smoke          # quick test
 
-Every finished run is appended to results/seg_results.csv. Runs already in that file
-(same tag, init, fraction, seed and steps) are skipped, so an interrupted job can be resumed.
+Every finished run is appended to results/seg_results.csv (or --results-file). Runs already in
+that file (same tag, init, fraction, seed and steps) are skipped, so an interrupted job can be
+resumed. Two processes can run side by side on Kaggle's two GPUs with --device cuda:0 / cuda:1,
+as long as each writes its own --results-file.
 """
 
 import argparse
@@ -227,7 +229,7 @@ def run_one(init, frac, seed, train, evals, args, device, out):
           + "  ".join(f"{s} IoU {row[f'{s}_iou']:.4f}" for s, _, _ in EVAL_SETS))
 
     # save results
-    csv = out / "seg_results.csv"
+    csv = out / args.results_file
     pd.DataFrame([row]).to_csv(csv, mode="a", header=not csv.exists(), index=False)
     (out / "per_patch").mkdir(exist_ok=True)
     pd.concat(per_patch).to_csv(out / "per_patch" / f"{run}.csv", index=False)
@@ -256,6 +258,8 @@ def main():
     p.add_argument("--weight-decay", type=float, default=1e-4)
     p.add_argument("--warmup", type=int, default=150)
     p.add_argument("--tag", default="main", help="label for this group of runs")
+    p.add_argument("--results-file", default="seg_results.csv",
+                   help="results CSV name; use a different one for each process running in parallel")
     p.add_argument("--save-seeds", nargs="*", type=int, default=[0],
                    help="save the best model for these seeds")
     p.add_argument("--max-patches", type=int, default=0,
@@ -273,9 +277,9 @@ def main():
           + (f" ({torch.cuda.get_device_name(device)})" if device.type == "cuda" else ""))
     print(f"results go to: {out}")
 
-    # which runs still need doing
-    todo = [(i, f, s) for i in args.inits for f in args.fracs for s in args.seeds]
-    csv = out / "seg_results.csv"
+    # which runs still need doing (seed by seed, so a partial job still gives complete seeds)
+    todo = [(i, f, s) for s in args.seeds for i in args.inits for f in args.fracs]
+    csv = out / args.results_file
     if csv.exists():
         done = pd.read_csv(csv)
         done_keys = set(zip(done.tag, done.init, done.frac.round(6), done.seed, done.steps))
