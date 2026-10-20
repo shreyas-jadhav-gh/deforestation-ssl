@@ -166,3 +166,30 @@ def metrics_at_threshold(hist, k):
     m = metrics_from_counts(tp, fp, fn, tn)
     m["pred_cleared_share"] = (tp + fp) / max(tp + fp + fn + tn, 1)
     return m
+
+
+# -----------------------------------------------------------------------------
+# Unlabeled patches (for self-supervised pretraining)
+# -----------------------------------------------------------------------------
+def unlabeled_index(data_root=None):
+    """The unlabeled patch list (unlabeled_downloaded.csv) with a 'path' column added.
+    The .npz files may be spread over several folders called 'unlabeled' (as on Kaggle)."""
+    csv = find_file("unlabeled_downloaded.csv", data_root)
+    df = pd.read_csv(csv)
+    paths = {}
+    for root in search_roots(data_root):
+        paths = {p.stem: str(p) for p in root.rglob("unlabeled/*.npz")}
+        if paths:
+            break
+    missing = sorted(set(df.patch_id) - set(paths))
+    if missing:
+        raise FileNotFoundError(f"{len(missing)} unlabeled patches not found, e.g. {missing[0]}")
+    df["path"] = df.patch_id.map(paths)
+    return df.sort_values("patch_id").reset_index(drop=True)
+
+
+def cache_dir():
+    """Scratch space for large temporary files (not saved with Kaggle output, not in git)."""
+    d = Path("/tmp/defor_cache") if KAGGLE_WORKING.exists() else REPO / "data" / "cache"
+    d.mkdir(parents=True, exist_ok=True)
+    return d
