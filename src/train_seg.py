@@ -295,6 +295,9 @@ def main():
     p.add_argument("--eval-batch-size", type=int, default=32)
     p.add_argument("--lrs", nargs="+", type=float, default=[5e-4],
                    help="learning rate(s); several values = a learning-rate search")
+    p.add_argument("--lr-from-tag", default=None,
+                   help="use, for each init, the learning rate with the best mean Amazon-validation "
+                        "IoU among earlier runs with this tag in the results file (ignores --lrs)")
     p.add_argument("--weight-decay", type=float, default=1e-4)
     p.add_argument("--warmup", type=int, default=150)
     p.add_argument("--tag", default="main", help="label for this group of runs")
@@ -317,10 +320,28 @@ def main():
           + (f" ({torch.cuda.get_device_name(device)})" if device.type == "cuda" else ""))
     print(f"results go to: {out}")
 
-    # which runs still need doing (seed by seed, so a partial job still gives complete seeds)
-    todo = [(i, lr, f, s) for s in args.seeds for i in args.inits for lr in args.lrs
-            for f in args.fracs]
     csv = out / args.results_file
+
+    # learning rate per initialisation: given (--lrs) or taken from an earlier search (--lr-from-tag)
+    lrs_for = {i: args.lrs for i in args.inits}
+    if args.lr_from_tag:
+        if not csv.exists():
+            raise SystemExit(f"--lr-from-tag: {csv} not found")
+        found = pd.read_csv(csv)
+        for i in args.inits:
+            name = i.partition("=")[0]
+            rows = found[(found.tag == args.lr_from_tag) & (found.init == name)]
+            if rows.empty:
+                raise SystemExit(f"--lr-from-tag: no '{args.lr_from_tag}' runs for {name} in {csv}")
+            per_lr = rows.groupby("lr").amazon_val_iou_t.mean()
+            lrs_for[i] = [float(per_lr.idxmax())]
+            print(f"learning rate for {name} from '{args.lr_from_tag}' runs: {lrs_for[i][0]:g} "
+                  f"(mean Amazon validation IoU per learning rate: "
+                  f"{', '.join(f'{lr:g}: {v:.4f}' for lr, v in per_lr.items())})")
+
+    # which runs still need doing (seed by seed, so a partial job still gives complete seeds)
+    todo = [(i, lr, f, s) for s in args.seeds for i in args.inits for lr in lrs_for[i]
+            for f in args.fracs]
     if csv.exists():
         done = pd.read_csv(csv)
         done_keys = set(zip(done.tag, done.init, done.lr.round(9), done.frac.round(6),
