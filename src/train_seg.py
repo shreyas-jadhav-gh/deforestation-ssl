@@ -10,6 +10,11 @@ Encoder initialisations (--inits):
     ssl4eo        MoCo on SSL4EO-S12 (public weights, 13 bands, the same ones TorchGeo uses)
     imagenet      supervised ImageNet weights (first layer adapted to 13 bands by the library)
     NAME=PATH     your own encoder checkpoint, e.g. moco_both=/kaggle/working/.../encoder.pt
+                  (PATH may be find:pretrain/moco_both/encoder.pt to search the results folder and
+                  the inputs, e.g. an earlier notebook version's output attached on Kaggle)
+
+Input (--input): post = the 2024 image only (default); both = 2024 and 2019 images, a
+Siamese change-detection U-Net with a shared encoder (see SiameseDiffUnet).
 
 Examples (from the repository root):
     python src/train_seg.py --inits scratch ssl4eo --fracs 0.01 0.05 0.1 0.25 1.0 --seeds 0 1 2
@@ -28,6 +33,7 @@ as long as each writes its own --results-file.
 
 import argparse
 import datetime
+import inspect
 import json
 import math
 import os
@@ -80,6 +86,9 @@ def build_model(init):
         state = torch.hub.load_state_dict_from_url(SSL4EO_URL, map_location="cpu", progress=False,
                                                    check_hash=True, weights_only=True)
     elif path:
+        if path.startswith("find:"):   # e.g. find:pretrain/moco_both/encoder.pt
+            path = str(C.find_path(path[len("find:"):]))
+            print(f"  using encoder {path}")
         ckpt = torch.load(path, map_location="cpu", weights_only=True)
         state = ckpt.get("encoder", ckpt)
     else:
@@ -88,11 +97,38 @@ def build_model(init):
     return model
 
 
+class SiameseDiffUnet(nn.Module):
+    """Change detection from two dates (input: 2024 bands then 2019 bands, 26 channels).
+    One shared encoder looks at each date; the U-Net decoder sees the difference of their
+    features at every scale (the 'FC-Siam-diff' idea, Daudt et al. 2018). Because the encoder is
+    the ordinary 13-band one, every pretrained initialisation can be used unchanged."""
+
+    def __init__(self, unet):
+        super().__init__()
+        self.unet = unet
+        params = inspect.signature(unet.decoder.forward).parameters.values()
+        self.star_args = any(p.kind == p.VAR_POSITIONAL for p in params)   # differs between smp versions
+
+    def forward(self, x):
+        n = len(C.BANDS)
+        both = self.unet.encoder(torch.cat([x[:, :n], x[:, n:]], 0))      # one pass for both dates
+        feats = [f[: len(x)] - f[len(x):] for f in both]                    # 2024 minus 2019
+        out = self.unet.decoder(*feats) if self.star_args else self.unet.decoder(feats)
+        return self.unet.segmentation_head(out)
+
+
 # -----------------------------------------------------------------------------
 # Training pieces
 # -----------------------------------------------------------------------------
+def batch_input(data, idx):
+    """uint16 model input for the patches `idx`: 2024 bands, plus 2019 bands if they were loaded."""
+    if "pre" in data:
+        return np.concatenate([data["post"][idx], data["pre"][idx]], axis=1)
+    return data["post"][idx]
+
+
 def to_input(images_uint16, device):
-    """uint16 patches (B, 13, H, W) -> float tensor on device, divided by 10000."""
+    """uint16 patches (B, C, H, W) -> float tensor on device, divided by 10000."""
     x = torch.from_numpy(images_uint16.astype(np.float32))
     return x.to(device, non_blocking=True) / C.SCALE
 
@@ -130,11 +166,11 @@ def evaluate(model, data, device, batch_size, amp):
     predicted 'cleared' probabilities (row 0: forest pixels, row 1: cleared pixels) for
     threshold-free metrics."""
     model.eval()
-    images, labels = data["post"], data["label"]
-    counts = np.zeros((len(images), 4), dtype=np.int64)
+    labels = data["label"]
+    counts = np.zeros((len(labels), 4), dtype=np.int64)
     hist = torch.zeros(2, C.NBINS, dtype=torch.int64, device=device)
-    for s in range(0, len(images), batch_size):
-        x = to_input(images[s:s + batch_size], device)
+    for s in range(0, len(labels), batch_size):
+        x = to_input(batch_input(data, slice(s, s + batch_size)), device)
         y = torch.from_numpy(labels[s:s + batch_size].astype(np.int64)).to(device)
         with torch.autocast(device.type, dtype=torch.float16, enabled=amp):
             logits = model(x)
@@ -175,7 +211,7 @@ def lr_factor(step, total, warmup):
 # -----------------------------------------------------------------------------
 def run_one(init, lr, frac, seed, train, evals, args, device, out):
     init_name = init.partition("=")[0]
-    run = f"{args.tag}_{init_name}_lr{lr:g}_f{frac:g}_s{seed}"
+    run = f"{args.tag}_{init_name}{'_cd' if args.input == 'both' else ''}_lr{lr:g}_f{frac:g}_s{seed}"
     amp = device.type == "cuda" and not args.no_amp
     torch.manual_seed(seed)
     np.random.seed(seed)
@@ -187,7 +223,10 @@ def run_one(init, lr, frac, seed, train, evals, args, device, out):
     print(f"\n=== {run}: {len(subset)} training patches "
           f"({cleared_share:.1%} of valid pixels cleared) ===")
 
-    model = build_model(init).to(device)
+    model = build_model(init)
+    if args.input == "both":
+        model = SiameseDiffUnet(model)
+    model = model.to(device)
     opt = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=args.weight_decay)
     sched = torch.optim.lr_scheduler.LambdaLR(
         opt, lambda s: lr_factor(s, args.steps, args.warmup))
@@ -202,7 +241,7 @@ def run_one(init, lr, frac, seed, train, evals, args, device, out):
     model.train()
     for step in range(1, args.steps + 1):
         idx = next(stream)
-        x = to_input(train["post"][idx], device)
+        x = to_input(batch_input(train, idx), device)
         y = torch.from_numpy(train["label"][idx].astype(np.int64)).to(device)
         x, y = augment(x, y, rng)
         with torch.autocast(device.type, dtype=torch.float16, enabled=amp):
@@ -240,7 +279,7 @@ def run_one(init, lr, frac, seed, train, evals, args, device, out):
     # final evaluation of the best checkpoint on every set, using the threshold tuned on
     # Amazon validation (fixed before looking at the test sets) and at 0.5
     model.load_state_dict(best["state"])
-    row = {"tag": args.tag, "init": init_name, "lr": lr, "frac": frac, "seed": seed,
+    row = {"tag": args.tag, "init": init_name, "input": args.input, "lr": lr, "frac": frac, "seed": seed,
            "steps": args.steps, "n_train": len(subset), "best_step": best["step"],
            "threshold": best["k"] / C.NBINS}
     per_patch, hists = [], {}
@@ -310,6 +349,8 @@ def main():
     p.add_argument("--data-root", default=None)
     p.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
     p.add_argument("--no-amp", action="store_true", help="disable mixed precision")
+    p.add_argument("--input", choices=["post", "both"], default="post",
+                   help="post: the 2024 image only; both: 2024 and 2019 (change detection)")
     args = p.parse_args()
 
     device = torch.device(args.device)
@@ -344,10 +385,11 @@ def main():
             for f in args.fracs]
     if csv.exists():
         done = pd.read_csv(csv)
-        done_keys = set(zip(done.tag, done.init, done.lr.round(9), done.frac.round(6),
+        done_input = done["input"].fillna("post") if "input" in done else pd.Series("post", index=done.index)
+        done_keys = set(zip(done.tag, done.init, done_input, done.lr.round(9), done.frac.round(6),
                             done.seed, done.steps))
         todo = [(i, lr, f, s) for i, lr, f, s in todo
-                if (args.tag, i.partition("=")[0], round(lr, 9), round(f, 6), s, args.steps)
+                if (args.tag, i.partition("=")[0], args.input, round(lr, 9), round(f, 6), s, args.steps)
                 not in done_keys]
     print(f"{len(todo)} runs to do")
     if not todo:
@@ -362,12 +404,17 @@ def main():
 
     print("loading patches into memory...")
     train_df = subset_of("amazon", "train")
-    train = C.load_patches(train_df.path, ["post", "label"], name="amazon_train")
+    keys = ["post", "pre", "label"] if args.input == "both" else ["post", "label"]
+    train = C.load_patches(train_df.path, keys, name="amazon_train")
     evals = {}
     for set_name, region, split in EVAL_SETS:
         df = subset_of(region, split)
-        evals[set_name] = C.load_patches(df.path, ["post", "label"], name=set_name)
+        evals[set_name] = C.load_patches(df.path, keys, name=set_name)
         evals[set_name]["ids"] = df.patch_id.values
+    if args.input == "both":   # no clear 2019 view: such pixels cannot be scored for change
+        for data in [train] + list(evals.values()):
+            for i in range(len(data["label"])):
+                data["label"][i][(data["pre"][i] == 0).all(axis=0)] = C.IGNORE
 
     for init, lr, frac, seed in todo:
         run_one(init, lr, frac, seed, train, evals, args, device, out)

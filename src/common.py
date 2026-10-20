@@ -193,3 +193,18 @@ def cache_dir():
     d = Path("/tmp/defor_cache") if KAGGLE_WORKING.exists() else REPO / "data" / "cache"
     d.mkdir(parents=True, exist_ok=True)
     return d
+
+
+def find_path(suffix, data_root=None):
+    """A file whose path ends with `suffix` (e.g. 'pretrain/moco_both/encoder.pt'), searched in
+    this session's results folder first, then in the data folders (e.g. an earlier Kaggle
+    notebook output attached as input)."""
+    suffix = suffix.replace("\\", "/").strip("/")
+    name = suffix.split("/")[-1]
+    for root in [results_dir()] + search_roots(data_root):
+        if not root.exists():
+            continue
+        for p in sorted(root.rglob(name)):
+            if p.as_posix().endswith("/" + suffix):
+                return p
+    raise FileNotFoundError(f"no file ending in {suffix}")

@@ -224,3 +224,5 @@ checkpoints/
 *.tif
 results/previews/
 results/checkpoints/
+*.pt
+results/kaggle_*/
