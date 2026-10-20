@@ -351,6 +351,11 @@ def main():
     p.add_argument("--no-amp", action="store_true", help="disable mixed precision")
     p.add_argument("--input", choices=["post", "both"], default="post",
                    help="post: the 2024 image only; both: 2024 and 2019 (change detection)")
+    p.add_argument("--cache", action="store_true",
+                   help="read the patches through a shared memory-mapped cache (see common."
+                        "cached_patches) so two processes on two GPUs keep one copy in RAM")
+    p.add_argument("--build-cache", action="store_true",
+                   help="only build that cache for the chosen --input, then exit")
     args = p.parse_args()
 
     device = torch.device(args.device)
@@ -365,7 +370,7 @@ def main():
 
     # learning rate per initialisation: given (--lrs) or taken from an earlier search (--lr-from-tag)
     lrs_for = {i: args.lrs for i in args.inits}
-    if args.lr_from_tag:
+    if args.lr_from_tag and not args.build_cache:
         if not csv.exists():
             raise SystemExit(f"--lr-from-tag: {csv} not found")
         found = pd.read_csv(csv)
@@ -391,9 +396,12 @@ def main():
         todo = [(i, lr, f, s) for i, lr, f, s in todo
                 if (args.tag, i.partition("=")[0], args.input, round(lr, 9), round(f, 6), s, args.steps)
                 not in done_keys]
-    print(f"{len(todo)} runs to do")
-    if not todo:
-        return
+    if args.build_cache:
+        todo = []
+    else:
+        print(f"{len(todo)} runs to do")
+        if not todo:
+            return
 
     # load the data once for all runs
     index = C.labeled_index(args.data_root)
@@ -403,14 +411,18 @@ def main():
         return df.iloc[: args.max_patches] if args.max_patches else df
 
     print("loading patches into memory...")
+    load = C.cached_patches if (args.cache or args.build_cache) else C.load_patches
     train_df = subset_of("amazon", "train")
     keys = ["post", "pre", "label"] if args.input == "both" else ["post", "label"]
-    train = C.load_patches(train_df.path, keys, name="amazon_train")
+    train = load(train_df.path, keys, name="amazon_train")
     evals = {}
     for set_name, region, split in EVAL_SETS:
         df = subset_of(region, split)
-        evals[set_name] = C.load_patches(df.path, keys, name=set_name)
+        evals[set_name] = load(df.path, keys, name=set_name)
         evals[set_name]["ids"] = df.patch_id.values
+    if args.build_cache:
+        print("cache ready")
+        return
     if args.input == "both":   # no clear 2019 view: such pixels cannot be scored for change
         for data in [train] + list(evals.values()):
             for i in range(len(data["label"])):

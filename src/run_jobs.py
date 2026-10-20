@@ -4,6 +4,7 @@ Run a named job on Kaggle: optional preparation steps first, then one 'part' per
 and a summary at the end.
 
     python -u src/run_jobs.py full
+    python src/run_jobs.py cd --dry-run      # only print the steps (with the choices filled in)
 
 Each part is a list of steps (scripts with arguments) run one after another on its GPU. If a
 step fails, the part carries on with its next step (steps that depend on it fail quickly).
@@ -12,6 +13,7 @@ pretrain_moco.py steps write results/pretrain/<name>/. Logs: log_<job>_<part>.tx
 '{results}' in step arguments is replaced by the results folder.
 """
 
+import re
 import shlex
 import subprocess
 import sys
@@ -30,6 +32,17 @@ LR_CANDIDATES = "--lrs 5e-5 1e-4 2e-4 5e-4"
 SEARCH = f"--fracs 0.05 1.0 --seeds 0 {LR_CANDIDATES}"
 MOCO_BOTH = "moco_both={results}/pretrain/moco_both/encoder.pt"
 MOCO_AMAZON = "moco_amazon={results}/pretrain/moco_amazon/encoder.pt"
+
+# Jobs that build on the 'full' job (its output attached on Kaggle as an input) can use:
+#   {best_moco}   the MoCo variant with the higher mean Amazon-validation IoU (tuned threshold)
+#                 over the full job's label-fraction grid (same fractions and seeds for both)
+#   {lr:NAME}     the learning rate NAME used in the full job's grid
+EARLIER = ["full_moco_both.csv", "full_moco_amazon.csv"]
+FIND_BEST = "{best_moco}=find:pretrain/{best_moco}/encoder.pt"
+FIND_BOTH = "moco_both=find:pretrain/moco_both/encoder.pt"
+FIND_AMAZON = "moco_amazon=find:pretrain/moco_amazon/encoder.pt"
+LR_BEST = "{lr:{best_moco}}"
+CD = "--input both --cache"
 
 JOBS = {
     # Learning-rate search: every initialisation tries the same 4 learning rates at 5% and
@@ -66,11 +79,87 @@ JOBS = {
             ],
         },
     },
+    # Change detection (2019 + 2024 images, Siamese U-Net) for scratch, ssl4eo and the better
+    # MoCo variant, each with the learning rate it used in the full job, over the same grid.
+    # Plus a check at 1e-3 for both MoCo variants (the full job's search picked 5e-4, the top of
+    # its range). The patches go through a shared cache: two change-detection processes holding
+    # their own copies (about 10 GB each) would not fit in Kaggle's RAM.
+    "cd": {
+        "before": [("train_seg.py", f"{CD} --build-cache")],
+        "parts": {
+            "a": [
+                ("train_seg.py", f"{CD} --inits scratch --lrs {{lr:scratch}} {GRID}"),
+                ("train_seg.py", f"{CD} --inits {FIND_BEST} --lrs {LR_BEST} --fracs {FRACS} --seeds 0"),
+                ("train_seg.py", f"--cache --inits {FIND_BOTH} {FIND_AMAZON} "
+                                 "--fracs 0.05 1.0 --seeds 0 --lrs 1e-3 --tag search"),
+            ],
+            "b": [
+                ("train_seg.py", f"{CD} --inits ssl4eo --lrs {{lr:ssl4eo}} {GRID}"),
+                ("train_seg.py", f"{CD} --inits {FIND_BEST} --lrs {LR_BEST} --fracs {FRACS} --seeds 1 2"),
+            ],
+        },
+    },
 }
 
 PRINT_EVERY_S = 300
 SUMMARY_METRICS = ["amazon_val_iou_t", "amazon_test_iou_t", "congo_test_iou_t",
                    "amazon_test_ap", "congo_test_ap", "congo_test_pred_cleared_share_t"]
+
+
+def earlier_runs():
+    """The full job's fine-tuning results (found in this session's results or the inputs)."""
+    frames = []
+    for name in EARLIER:
+        try:
+            path = C.find_path(name)
+        except FileNotFoundError:
+            raise SystemExit(f"{name} not found: this job needs the 'full' job's output "
+                             "(on Kaggle: Add Input -> that notebook version's output)")
+        print(f"earlier results: {path}")
+        frames.append(pd.read_csv(path))
+    runs = pd.concat(frames, ignore_index=True)
+    runs["input"] = runs["input"].fillna("post") if "input" in runs else "post"
+    return runs[(runs.tag == "full") & (runs.input == "post")]
+
+
+def best_moco(runs):
+    rows = runs[runs.init.str.startswith("moco")]
+    table = rows.pivot_table(index=["frac", "seed"], columns="init", values="amazon_val_iou_t").dropna()
+    if table.empty or table.shape[1] < 1:
+        raise SystemExit("no MoCo runs found in the earlier results")
+    means = table.mean()
+    print(f"MoCo variant: mean Amazon-validation IoU over the same {len(table)} runs each: "
+          + ", ".join(f"{k} {v:.4f}" for k, v in means.items()) + f"  -> {means.idxmax()}")
+    return means.idxmax()
+
+
+def grid_lr(runs, init):
+    lrs = runs[runs.init == init].lr.unique()
+    if len(lrs) != 1:
+        raise SystemExit(f"expected one learning rate for {init} in the earlier grid, found {list(lrs)}")
+    print(f"learning rate for {init}: {lrs[0]:g}")
+    return float(lrs[0])
+
+
+def resolve(job):
+    """Fill in {best_moco} and {lr:NAME} from the earlier full job, once, before anything runs."""
+    steps = [a for part in job["parts"].values() for _, a in part] + [a for _, a in job.get("before", [])]
+    if not any("{best_moco}" in a or "{lr:" in a for a in steps):
+        return job
+    runs = earlier_runs()
+    best = best_moco(runs) if any("{best_moco}" in a for a in steps) else None
+    lrs = {}
+
+    def fill(args):
+        args = args.replace("{best_moco}", best) if best else args
+        def lr(m):
+            if m.group(1) not in lrs:
+                lrs[m.group(1)] = grid_lr(runs, m.group(1))
+            return f"{lrs[m.group(1)]:g}"
+        return re.sub(r"\{lr:(\w+)\}", lr, args)
+
+    return {"before": [(s, fill(a)) for s, a in job.get("before", [])],
+            "parts": {p: [(s, fill(a)) for s, a in steps_] for p, steps_ in job["parts"].items()}}
 
 
 def gpu_count():
@@ -184,10 +273,16 @@ def summarise_pretraining(job):
 
 
 def main():
-    if len(sys.argv) != 2 or sys.argv[1] not in JOBS:
-        raise SystemExit(f"usage: python src/run_jobs.py JOB   (JOB is one of: {', '.join(JOBS)})")
-    name = sys.argv[1]
-    job = JOBS[name]
+    argv = [a for a in sys.argv[1:] if a != "--dry-run"]
+    if len(argv) != 1 or argv[0] not in JOBS:
+        raise SystemExit(f"usage: python src/run_jobs.py JOB [--dry-run]   (JOB: {', '.join(JOBS)})")
+    name = argv[0]
+    job = resolve(JOBS[name])
+    if "--dry-run" in sys.argv:   # show the steps that would run, then stop
+        for part, steps in [("before", job.get("before", []))] + list(job["parts"].items()):
+            for script, args in steps:
+                print(f"{part:7s} {shlex.join(command(script, args, name, part, 'cuda:0')[2:])}")
+        return
     out = C.results_dir()
     out.mkdir(parents=True, exist_ok=True)
     for script, args in job.get("before", []):

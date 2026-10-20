@@ -2,7 +2,8 @@
 Do the models' 'false alarms' hide real clearing? Compare every seed-0 model's predictions on the
 test patches with the Hansen labels AND with independent RADD radar alerts (data/alerts/).
 
-    python src/validate_alerts.py --results results/kaggle_full/results --fracs 0.1 1.0
+    python src/validate_alerts.py --results results/kaggle_full/results
+    python src/validate_alerts.py --results results/kaggle_full/results results/kaggle_cd/results --tags full cd
 
 Only pixels that are scored (label 0 or 1) and inside RADD's forest baseline count. Per region:
   iou_hansen     IoU against the Hansen labels (the usual score, restricted to this area)
@@ -14,7 +15,7 @@ Only pixels that are scored (label 0 or 1) and inside RADD's forest baseline cou
   fa_lift        fa_confirmed / base_rate: how many times more often RADD backs a false alarm
                  than a random forest pixel (well above 1 = many 'false alarms' are real clearing)
 A first row, 'Hansen labels', scores the labels themselves against RADD for reference.
-Writes <results>/figures/table_radd_validation.csv. Runs on the laptop (GPU used if available).
+Writes <first results folder>/figures/table_radd_validation.csv. Runs on the laptop (GPU if available).
 """
 
 import argparse
@@ -83,21 +84,23 @@ def model_counts(model, data, dates, regions, threshold, device, batch_size=8):
 
 def main():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("--results", required=True, help="downloaded results folder (with checkpoints/)")
+    p.add_argument("--results", required=True, nargs="+",
+                   help="downloaded results folder(s), each with <tag>_all.csv and checkpoints/")
     p.add_argument("--fracs", nargs="+", type=float, default=[0.1, 1.0])
     p.add_argument("--tags", nargs="+", default=["full"], help="which *_all.csv files to use")
     args = p.parse_args()
-    results = Path(args.results)
+    folders = [Path(f) for f in args.results]
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     runs = []
-    for tag in args.tags:
-        f = results / f"{tag}_all.csv"
-        if f.exists():
-            r = pd.read_csv(f)
-            runs.append(r[(r.tag == tag) & (r.seed == 0)])
+    for folder in folders:
+        for tag in args.tags:
+            f = folder / f"{tag}_all.csv"
+            if f.exists():
+                r = pd.read_csv(f)
+                runs.append(r[(r.tag == tag) & (r.seed == 0)].assign(folder=str(folder)))
     if not runs:
-        raise SystemExit(f"none of {[t + '_all.csv' for t in args.tags]} found in {results}")
+        raise SystemExit(f"none of {[t + '_all.csv' for t in args.tags]} found in {args.results}")
     runs = pd.concat(runs, ignore_index=True)
     runs["input"] = runs["input"].fillna("post") if "input" in runs else "post"
     runs = runs[runs.frac.round(6).isin([round(f, 6) for f in args.fracs])]
@@ -105,11 +108,11 @@ def main():
     models = []
     for row in runs.itertuples():
         cd = "_cd" if row.input == "both" else ""
-        hits = sorted((results / "checkpoints").glob(f"{row.tag}_{row.init}{cd}_lr*_f{row.frac:g}_s0.pt"))
+        hits = sorted((Path(row.folder) / "checkpoints").glob(f"{row.tag}_{row.init}{cd}_lr*_f{row.frac:g}_s0.pt"))
         if hits:
             models.append((row, hits[0]))
     if not models:
-        raise SystemExit(f"no seed-0 checkpoints for fractions {args.fracs} in {results / 'checkpoints'}")
+        raise SystemExit(f"no seed-0 checkpoints for fractions {args.fracs} in {args.results}")
     need_pre = any(row.input == "both" for row, _ in models)
 
     index = C.labeled_index()
@@ -141,7 +144,7 @@ def main():
             torch.cuda.empty_cache()
 
     table = pd.DataFrame(rows).sort_values(["region", "input", "frac", "model"], na_position="first")
-    out = results / "figures"
+    out = folders[0] / "figures"
     out.mkdir(exist_ok=True)
     table.to_csv(out / "table_radd_validation.csv", index=False)
     show = table.copy()

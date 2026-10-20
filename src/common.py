@@ -5,7 +5,9 @@ Nothing in this file needs PyTorch.
 """
 
 import concurrent.futures as cf
+import hashlib
 import math
+import os
 from pathlib import Path
 
 import numpy as np
@@ -77,6 +79,45 @@ def load_patches(paths, keys, workers=8, name=""):
                 print(f"    {name}: {n}/{len(paths)} patches loaded")
     gb = sum(a.nbytes for a in out.values()) / 1e9
     print(f"  {name}: {len(paths)} patches in memory ({gb:.2f} GB)")
+    return out
+
+
+def cached_patches(paths, keys, workers=8, name=""):
+    """Like load_patches, but the images live in memory-mapped .npy files in cache_dir(), so
+    processes running side by side (one per GPU) share ONE copy in RAM (the operating system's
+    file cache) instead of each holding its own. The files are built on first use; later calls
+    only map them. Labels are small and returned as an ordinary in-memory copy (callers edit them)."""
+    paths = list(paths)
+    ids = "\n".join(Path(p).stem for p in paths)
+    tag = hashlib.md5(ids.encode()).hexdigest()[:10]
+    files = {k: cache_dir() / f"labeled_{k}_{len(paths)}_{tag}.npy" for k in keys}
+    todo = [k for k in keys if not Path(f"{files[k]}.done").exists()]
+    if todo:
+        with np.load(paths[0]) as d:
+            first = {k: d[k] for k in todo}
+        tmp = {k: files[k].with_name(f"{files[k].stem}.{os.getpid()}.tmp.npy") for k in todo}
+        arrays = {k: np.lib.format.open_memmap(tmp[k], mode="w+", dtype=first[k].dtype,
+                                               shape=(len(paths),) + first[k].shape) for k in todo}
+
+        def fill(i):
+            with np.load(paths[i]) as d:
+                for k in todo:
+                    arrays[k][i] = d[k]
+
+        print(f"  {name}: building the shared cache in {cache_dir()} (one-off)...")
+        with cf.ThreadPoolExecutor(max_workers=workers) as pool:
+            for n, _ in enumerate(pool.map(fill, range(len(paths))), 1):
+                if n % 500 == 0:
+                    print(f"    {name}: {n}/{len(paths)} patches cached")
+        for k in todo:
+            arrays.pop(k).flush()          # dropping the last reference closes the file
+            os.replace(tmp[k], files[k])   # (Windows cannot rename a file that is still open)
+            Path(f"{files[k]}.done").touch()
+    out = {k: np.load(files[k], mmap_mode="r") for k in keys}
+    if "label" in out:
+        out["label"] = np.array(out["label"])
+    gb = sum(a.nbytes for a in out.values()) / 1e9
+    print(f"  {name}: {len(paths)} patches, memory-mapped from the shared cache ({gb:.2f} GB)")
     return out
 
 

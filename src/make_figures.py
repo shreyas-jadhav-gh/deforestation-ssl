@@ -2,13 +2,15 @@
 Report figures and tables from a downloaded Kaggle results folder.
 
     python src/make_figures.py --results results/kaggle_full/results
+    python src/make_figures.py --results results/kaggle_full/results results/kaggle_cd/results
 
-Reads <results>/full_all.csv (and cd_all.csv if present) and <results>/pretrain/*/log.csv.
-Writes PNG figures and summary tables to <results>/figures/:
+Reads full_all.csv and cd_all.csv from every --results folder given, and pretrain/*/log.csv.
+Writes PNG figures and summary tables to <first results folder>/figures/:
     fig_label_efficiency_iou.png   IoU vs label fraction, Amazon test and Congo test
     fig_label_efficiency_ap.png    same with average precision (threshold-free)
     fig_congo_false_alarms.png     share of Congo pixels predicted 'cleared', every run
     fig_pretraining.png            MoCo loss and accuracy during pretraining
+    fig_change_detection.png       2024 image only vs 2019 + 2024 (if change-detection runs exist)
     table_results.csv / .md        mean +/- std over seeds, every initialisation and fraction
 """
 
@@ -43,14 +45,15 @@ plt.rcParams.update({
 })
 
 
-def load_runs(results):
+def load_runs(folders):
     frames = []
-    for name in ["full_all.csv", "cd_all.csv"]:
-        f = results / name
-        if f.exists():
-            frames.append(pd.read_csv(f))
+    for results in folders:
+        for name in ["full_all.csv", "cd_all.csv"]:
+            f = results / name
+            if f.exists():
+                frames.append(pd.read_csv(f))
     if not frames:
-        raise SystemExit(f"no full_all.csv or cd_all.csv in {results}")
+        raise SystemExit(f"no full_all.csv or cd_all.csv in {[str(f) for f in folders]}")
     runs = pd.concat(frames, ignore_index=True)
     runs = runs[runs.tag != "search"].copy()
     runs["input"] = runs["input"].fillna("post") if "input" in runs else "post"
@@ -157,12 +160,13 @@ def congo_false_alarms(runs, out):
     plt.close(fig)
 
 
-def pretraining(results, out):
+def pretraining(folders, out):
     logs = {}
     for name in ["moco_both", "moco_amazon"]:
-        f = results / "pretrain" / name / "log.csv"
-        if f.exists():
-            logs[name] = pd.read_csv(f)
+        for results in folders:
+            f = results / "pretrain" / name / "log.csv"
+            if f.exists() and name not in logs:
+                logs[name] = pd.read_csv(f)
     if not logs:
         return False
     fig, axes = plt.subplots(1, 2, figsize=(9.2, 3.2))
@@ -190,6 +194,59 @@ def pretraining(results, out):
     return True
 
 
+def change_detection(runs, out):
+    """Per initialisation: the usual model (2024 image) vs the Siamese change-detection model
+    (2019 + 2024), IoU vs label fraction on both test sets."""
+    cd = runs[runs.input == "both"]
+    if cd.empty:
+        return False
+    inits = [i for i in INITS if i in set(cd.init)]
+    sets = [("amazon_test", "Amazon test"), ("congo_test", "Congo test")]
+    styles = [("post", "-", None, "2024 image only"), ("both", "--", SURFACE, "2019 + 2024 (change detection)")]
+    fracs = sorted(cd.frac.unique())
+    n_train = runs.groupby("frac").n_train.first()
+    fig, axes = plt.subplots(2, len(inits), figsize=(2.9 * len(inits) + 0.9, 5.4),
+                             sharex=True, sharey="row", squeeze=False)
+    for c, init in enumerate(inits):
+        label, colour, marker = INITS[init]
+        for r_, (s, set_title) in enumerate(sets):
+            ax = axes[r_, c]
+            for inp, ls, face, _ in styles:
+                g = runs[(runs.init == init) & (runs.input == inp) & runs.frac.isin(fracs)]
+                g = g.groupby("frac")[f"{s}_iou_t"]
+                if g.ngroups == 0:
+                    continue
+                mean, std = g.mean(), g.std().fillna(0)
+                ax.fill_between(mean.index, mean - std, mean + std, color=colour, alpha=0.08, lw=0)
+                ax.plot(mean.index, mean.values, color=colour, lw=1.5, ls=ls, marker=marker, ms=5,
+                        mfc=face or colour, mec=colour if face else SURFACE, mew=1.1, zorder=3)
+            ax.set_xscale("log")
+            ax.set_xticks(fracs)
+            ax.set_xticklabels([f"{f:.0%}\n{n_train[f]}" for f in fracs], fontsize=7)
+            ax.minorticks_off()
+            ax.grid(axis="x", visible=False)
+            if r_ == 0:
+                ax.set_title(label.replace(": ", ":\n"), loc="left", fontsize=9)
+            if c == 0:
+                ax.set_ylabel(f"{set_title}\nIoU, cleared class")
+            if r_ == 1:
+                ax.set_xlabel("labeled patches (share, number)", fontsize=7.5)
+    for row in axes:
+        row[0].set_ylim(bottom=0)
+    handles = [plt.Line2D([], [], color=INK2, lw=1.5, ls=ls, marker="o", ms=5, mfc=face or INK2,
+                          mec=INK2 if face else SURFACE, label=name) for _, ls, face, name in styles]
+    fig.legend(handles=handles, loc="upper left", ncol=2, bbox_to_anchor=(0.01, 1.0), handlelength=2.6)
+    fig.suptitle("Does seeing the 2019 image help? Change detection vs a single 2024 image",
+                 x=0.01, y=1.08, ha="left", fontsize=11, fontweight="bold")
+    fig.text(0.01, 1.035, "mean over 3 seeds, band = ±1 standard deviation; threshold tuned on Amazon "
+             "validation; change-detection scores leave out pixels with no clear 2019 view",
+             ha="left", fontsize=7.5, color=INK2)
+    fig.tight_layout()
+    fig.savefig(out, dpi=DPI, bbox_inches="tight")
+    plt.close(fig)
+    return True
+
+
 def tables(runs, out_dir):
     metrics = ["amazon_test_iou_t", "congo_test_iou_t", "amazon_test_ap", "congo_test_ap",
                "congo_test_pred_cleared_share_t"]
@@ -207,20 +264,23 @@ def tables(runs, out_dir):
 
 def main():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("--results", required=True, help="folder containing full_all.csv")
+    p.add_argument("--results", required=True, nargs="+",
+                   help="downloaded results folder(s) containing full_all.csv / cd_all.csv")
     args = p.parse_args()
-    results = Path(args.results)
-    out = results / "figures"
+    folders = [Path(f) for f in args.results]
+    out = folders[0] / "figures"
     out.mkdir(exist_ok=True)
-    runs = load_runs(results)
+    runs = load_runs(folders)
     print(f"{len(runs)} runs: " + ", ".join(f"{k}={v}" for k, v in runs.init.value_counts().items()))
     label_efficiency(runs, "iou_t", "Forest-loss IoU vs amount of labeled data",
                      "IoU, cleared class", out / "fig_label_efficiency_iou.png")
     label_efficiency(runs, "ap", "Average precision vs amount of labeled data (threshold-free)",
                      "average precision, cleared class", out / "fig_label_efficiency_ap.png")
     congo_false_alarms(runs, out / "fig_congo_false_alarms.png")
-    if pretraining(results, out / "fig_pretraining.png"):
+    if pretraining(folders, out / "fig_pretraining.png"):
         print("pretraining figure written")
+    if change_detection(runs, out / "fig_change_detection.png"):
+        print("change-detection figure written")
     tables(runs, out)
     print(f"figures and tables written to {out}")
 
