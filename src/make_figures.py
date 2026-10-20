@@ -60,6 +60,14 @@ def load_runs(folders):
     return runs[runs.init.isin(INITS)]
 
 
+def titles(fig, title, subtitle=None):
+    """Title and subtitle above the legend row, spaced in inches so they never collide."""
+    h = fig.get_figheight()
+    fig.suptitle(title, x=0.01, y=1 + 0.44 / h, ha="left", va="top", fontsize=11, fontweight="bold")
+    if subtitle:
+        fig.text(0.01, 1 + 0.10 / h, subtitle, ha="left", va="baseline", fontsize=8, color=INK2)
+
+
 def end_labels(ax, ends):
     """Direct labels at line ends; spread apart with leader lines when they would overlap."""
     if not ends:
@@ -115,9 +123,7 @@ def label_efficiency(runs, metric, title, ylabel, out, tag_input="post"):
         end_labels(ax, ends)
     handles, labels = axes[0].get_legend_handles_labels()
     fig.legend(handles, labels, loc="upper left", ncol=4, bbox_to_anchor=(0.01, 1.0), handlelength=2.2)
-    fig.suptitle(title, x=0.01, y=1.09, ha="left", fontsize=11, fontweight="bold")
-    fig.text(0.01, 1.03, "mean over 3 seeds; band = ±1 standard deviation", ha="left",
-             fontsize=8, color=INK2)
+    titles(fig, title, "mean over 3 seeds; band = ±1 standard deviation")
     fig.tight_layout()
     fig.savefig(out, dpi=DPI, bbox_inches="tight")
     plt.close(fig)
@@ -135,7 +141,7 @@ def congo_false_alarms(runs, out):
         label, colour, marker = INITS[init]
         v = r[r.init == init][col].values * 100
         ax.scatter(x + rng.uniform(-0.18, 0.18, len(v)), v, s=34, color=colour, marker=marker,
-                   edgecolors=SURFACE, linewidths=1.0, zorder=3)
+                   edgecolors=SURFACE, linewidths=0.5, zorder=3)
         worst = v.max()
         ax.annotate(f"max {worst:.1f}%", xy=(x, worst), xytext=(0, 7), textcoords="offset points",
                     ha="center", fontsize=7.5, color=INK2)
@@ -143,8 +149,12 @@ def congo_false_alarms(runs, out):
     ax.annotate(f"true share {true_share:.1%}", xy=(0.5, true_share * 100),   # in the gap between columns
                 xytext=(0, 4), textcoords="offset points", ha="center", fontsize=7.5, color=INK2)
     ax.set_yscale("log")
-    ax.set_yticks([0.3, 1, 3, 10, 30])
-    ax.set_yticklabels(["0.3%", "1%", "3%", "10%", "30%"])
+    values = r[col].values * 100
+    lo, hi = min(values.min(), true_share * 100) / 1.6, values.max() * 2.0
+    ax.set_ylim(lo, hi)
+    ticks = [t for t in [0.1, 0.3, 1, 3, 10, 30, 100] if lo <= t <= hi]
+    ax.set_yticks(ticks)
+    ax.set_yticklabels([f"{t:g}%" for t in ticks])
     ax.minorticks_off()
     ax.set_xticks(range(len(present)))
     ax.set_xticklabels([INITS[i][0].replace(": ", ":\n").replace(" (", "\n(") for i in present],
@@ -172,8 +182,10 @@ def pretraining(folders, out):
     fig, axes = plt.subplots(1, 2, figsize=(9.2, 3.2))
     for name, df in logs.items():
         label, colour, marker = INITS[name]
-        axes[0].plot(df.step, df.loss, color=colour, lw=1.5, label=label)
-        axes[1].plot(df.step, df.acc * 100, color=colour, lw=1.5, label=label)
+        for ax, y in ((axes[0], df.loss), (axes[1], df.acc * 100)):
+            ax.plot(df.step, y, color=colour, lw=0.8, alpha=0.35)
+            ax.plot(df.step, y.rolling(6, center=True, min_periods=1).mean(), color=colour, lw=1.8,
+                    label=label)
     queue = 4096
     axes[0].axhline(np.log(queue + 1), color=MUTED, lw=0.8)
     last_step = max(df.step.max() for df in logs.values())
@@ -186,9 +198,9 @@ def pretraining(folders, out):
         ax.grid(axis="x", visible=False)
     axes[1].set_ylim(bottom=0)
     axes[1].legend(loc="lower right")
-    fig.suptitle("MoCo pretraining on the unlabeled patches", x=0.01, ha="left", fontsize=11,
-                 fontweight="bold")
     fig.tight_layout()
+    titles(fig, "MoCo pretraining on the unlabeled patches",      # after the layout: no legend row
+           "thin line: every 50 steps; thick line: rolling mean over 300 steps")
     fig.savefig(out, dpi=DPI, bbox_inches="tight")
     plt.close(fig)
     return True
@@ -236,11 +248,9 @@ def change_detection(runs, out):
     handles = [plt.Line2D([], [], color=INK2, lw=1.5, ls=ls, marker="o", ms=5, mfc=face or INK2,
                           mec=INK2 if face else SURFACE, label=name) for _, ls, face, name in styles]
     fig.legend(handles=handles, loc="upper left", ncol=2, bbox_to_anchor=(0.01, 1.0), handlelength=2.6)
-    fig.suptitle("Does seeing the 2019 image help? Change detection vs a single 2024 image",
-                 x=0.01, y=1.08, ha="left", fontsize=11, fontweight="bold")
-    fig.text(0.01, 1.035, "mean over 3 seeds, band = ±1 standard deviation; threshold tuned on Amazon "
-             "validation; change-detection scores leave out pixels with no clear 2019 view",
-             ha="left", fontsize=7.5, color=INK2)
+    titles(fig, "Does seeing the 2019 image help? Change detection vs a single 2024 image",
+           "mean over 3 seeds, band = ±1 standard deviation; threshold tuned on Amazon validation; "
+           "change-detection scores leave out pixels with no clear 2019 view")
     fig.tight_layout()
     fig.savefig(out, dpi=DPI, bbox_inches="tight")
     plt.close(fig)
