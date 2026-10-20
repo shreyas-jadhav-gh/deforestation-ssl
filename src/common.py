@@ -124,3 +124,45 @@ def metrics_from_counts(tp, fp, fn, tn):
             "recall": div(tp, tp + fn),
             "miou": (iou_cleared + iou_forest) / 2,
             "accuracy": div(tp + tn, tp + fp + fn + tn)}
+
+
+# -----------------------------------------------------------------------------
+# Threshold-free evaluation from probability histograms
+# -----------------------------------------------------------------------------
+# hist has shape (2, NBINS): row 0 counts forest pixels, row 1 counts cleared pixels,
+# by the model's predicted probability of 'cleared' (bin k covers [k/NBINS, (k+1)/NBINS)).
+NBINS = 1000
+
+
+def counts_at_thresholds(hist):
+    """tp, fp, fn, tn when predicting 'cleared' for probability >= k/NBINS, for every k."""
+    neg, pos = hist[0].astype(np.float64), hist[1].astype(np.float64)
+    tp = pos[::-1].cumsum()[::-1]
+    fp = neg[::-1].cumsum()[::-1]
+    return tp, fp, pos.sum() - tp, neg.sum() - fp
+
+
+def average_precision(hist):
+    """Area under the precision-recall curve for the 'cleared' class (step-wise, as in sklearn)."""
+    tp, fp, fn, _ = counts_at_thresholds(hist)
+    n_pos = tp[0] + fn[0]
+    if n_pos == 0:
+        return float("nan")
+    tp, fp = tp[::-1], fp[::-1]                 # strictest threshold first: recall rises
+    precision = np.divide(tp, tp + fp, out=np.zeros_like(tp), where=(tp + fp) > 0)
+    recall = tp / n_pos
+    return float(np.sum(np.diff(recall, prepend=0.0) * precision))
+
+
+def best_threshold(hist):
+    """Threshold bin k (predict cleared if prob >= k/NBINS) that maximises IoU."""
+    tp, fp, fn, _ = counts_at_thresholds(hist)
+    iou = np.divide(tp, tp + fp + fn, out=np.zeros_like(tp), where=(tp + fp + fn) > 0)
+    return int(np.argmax(iou))
+
+
+def metrics_at_threshold(hist, k):
+    tp, fp, fn, tn = (v[k] for v in counts_at_thresholds(hist))
+    m = metrics_from_counts(tp, fp, fn, tn)
+    m["pred_cleared_share"] = (tp + fp) / max(tp + fp + fn + tn, 1)
+    return m
