@@ -250,7 +250,7 @@ def change_detection(runs, out):
     fig.legend(handles=handles, loc="upper left", ncol=2, bbox_to_anchor=(0.01, 1.0), handlelength=2.6)
     titles(fig, "Does seeing the 2019 image help? Change detection vs a single 2024 image",
            "mean over 3 seeds, band = ±1 standard deviation; threshold tuned on Amazon validation; "
-           "change-detection scores leave out pixels with no clear 2019 view")
+           "same test patches for both inputs")
     fig.tight_layout()
     fig.savefig(out, dpi=DPI, bbox_inches="tight")
     plt.close(fig)

@@ -1,0 +1,7 @@
+# PyTorch (torch) is installed separately for your GPU: https://pytorch.org
+segmentation-models-pytorch==0.5.0
+earthengine-api
+numpy
+pandas
+pyproj
+matplotlib
