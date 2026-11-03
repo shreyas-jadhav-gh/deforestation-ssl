@@ -10,14 +10,15 @@ Runs on a laptop CPU in a minute or two. From the repository root:
     python src/demo.py --ckpt results/kaggle_cd/results/checkpoints/cd_scratch_cd_lr0.0002_f0.1_s0.pt
     python src/demo.py --data data     # the full test sets, if you downloaded the dataset
 
-For each model it prints IoU, precision and recall of the 'cleared' class and the share of
-the scored area it calls cleared, separately for the Amazon and the Congo patches. It uses the
-probability threshold that was tuned on Amazon validation when the model was trained (read from
-the results CSVs in results/). It also saves results/demo/demo_f<frac>.png with the 2019 and
-2024 images, the label and each model's prediction, coloured by outcome.
+For each model it prints the IoU of the 'cleared' class and the share of the scored area it
+calls cleared, separately for the Amazon and the Congo patches, next to the same model's IoU on
+the full test sets (308 Amazon and 766 Congo patches, from the results CSVs in results/). It uses
+the probability threshold that was tuned on Amazon validation when the model was trained. It saves
+results/demo/demo_f<frac>.png with the 2019 and 2024 images, the label and each model's
+prediction coloured by outcome, and demo_f<frac>.csv with all scores (incl. precision, recall).
 
-Sixteen patches are only a sanity check; the numbers in the report are on the full test sets
-(308 Amazon and 766 Congo patches).
+Sixteen patches are only a sanity check: a few hard or easy patches move the score a lot. The
+numbers in the report are on the full test sets.
 """
 
 import argparse
@@ -56,16 +57,16 @@ def describe(ckpt):
     return {"tag": tag, "init": init, "lr": float(lr), "frac": float(frac), "seed": int(seed)}
 
 
-def tuned_threshold(run):
-    """The threshold chosen on Amazon validation for this run, from the results CSV (else 0.5)."""
+def training_record(run):
+    """This run's row in the results CSV (threshold tuned on Amazon validation, full test-set
+    scores), or None if the CSV or the row is missing."""
     csv = RESULTS[run["tag"]] / f"{run['tag']}_all.csv"
     if not csv.exists():
-        print(f"  ({csv.name} not found: using threshold 0.5)")
-        return 0.5
+        return None
     runs = pd.read_csv(csv)
     row = runs[(runs.tag == run["tag"]) & (runs.init == run["init"]) & (runs.seed == run["seed"])
                & ((runs.lr - run["lr"]).abs() < 1e-12) & ((runs.frac - run["frac"]).abs() < 1e-9)]
-    return float(row.threshold.iloc[0]) if len(row) else 0.5
+    return row.iloc[0] if len(row) else None
 
 
 def find_models(frac):
@@ -149,10 +150,13 @@ def main():
     data = C.load_patches(index.path, ["post", "pre", "label"], name="patches")
     data["patch_id"] = list(index.patch_id)
 
-    models, preds, table = [], {}, []
+    models, preds, table, details = [], {}, [], []
     for ckpt in ckpts:
         run = describe(ckpt)
-        run["threshold"] = tuned_threshold(run)
+        record = training_record(run)
+        if record is None:
+            print(f"  {ckpt.name}: not found in the results CSVs, using threshold 0.5")
+        run["threshold"] = float(record.threshold) if record is not None else 0.5
         two = run["tag"] == "cd"
         run["key"] = ckpt.stem
         run["column"] = ("2019+2024: " if two else "2024 only: ") + SHORT.get(run["init"], run["init"])
@@ -165,20 +169,29 @@ def main():
         row = {"input": "2019 + 2024" if two_dates else "2024 only",
                "encoder start": INITS.get(run["init"], (run["init"],))[0],
                "labels": f"{run['frac']:.0%}", "threshold": round(run["threshold"], 3)}
+        detail = {"checkpoint": ckpt.name, **row}
         for region in ("amazon", "congo"):
             sel = (index.region == region).to_numpy()
             if sel.any():
                 m = scores(preds[run["key"]][sel], data["label"][sel], run["threshold"])
+                full = record.get(f"{region}_test_iou_t", np.nan) if record is not None else np.nan
                 row[f"{region} IoU"] = m["iou"]
-                row[f"{region} precision"] = m["precision"]
-                row[f"{region} recall"] = m["recall"]
-                row[f"{region} called cleared"] = f"{m['called_cleared']:.1%} (true {m['truly_cleared']:.1%})"
+                row[f"{region} IoU, full test set"] = full
+                row[f"{region} called cleared (true)"] = f"{m['called_cleared']:.1%} ({m['truly_cleared']:.1%})"
+                detail.update({f"{region}_{k}": v for k, v in m.items()})
+                detail[f"{region}_full_test_iou"] = full
         models.append(run)
         table.append(row)
+        details.append(detail)
 
-    print("\nCleared class on these patches, threshold tuned on Amazon validation:")
+    n_reg = index.region.value_counts()
+    print(f"\nCleared class, threshold tuned on Amazon validation. 'IoU' is on these {len(index)} patches; "
+          f"'full test set' is the same model on all 308 Amazon / 766 Congo test patches (from the results CSVs).")
     with pd.option_context("display.width", 250, "display.max_columns", 30, "display.float_format", "{:.3f}".format):
         print(pd.DataFrame(table).to_string(index=False))
+    if len(index) < 100:
+        print(f"(Only {n_reg.get('amazon', 0)} Amazon and {n_reg.get('congo', 0)} Congo patches: a sanity check, "
+              "not a measurement. Hard or easy patches move the score a lot.)")
 
     rows = []
     for region in ("amazon", "congo"):
@@ -188,7 +201,8 @@ def main():
     name = f"demo_f{args.frac:g}" if not args.ckpt else "demo_selected"
     fig = draw(data, rows, models, preds)
     fig.savefig(out / f"{name}.png", dpi=150)
-    print(f"\nsaved {out / (name + '.png')}")
+    pd.DataFrame(details).to_csv(out / f"{name}.csv", index=False)
+    print(f"\nsaved {out / (name + '.png')} (picture) and {name}.csv (all scores, incl. precision and recall)")
 
 
 if __name__ == "__main__":
