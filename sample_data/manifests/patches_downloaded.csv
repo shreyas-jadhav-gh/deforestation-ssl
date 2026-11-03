@@ -1,0 +1,17 @@
+patch_id,region,split,forest_px,cleared_px,ignore_px,post_nodata_px,pre_nodata_px
+amazon_r052_c023,amazon,test,17928,1378,46230,0,0
+amazon_r054_c028,amazon,test,18102,2903,44531,0,0
+amazon_r058_c023,amazon,test,29997,4978,30561,0,0
+amazon_r071_c011,amazon,test,13566,2257,49713,0,0
+amazon_r072_c015,amazon,test,24085,5842,35609,0,0
+amazon_r077_c013,amazon,test,18633,1227,45676,0,0
+amazon_r078_c013,amazon,test,20690,1098,43748,0,0
+amazon_r079_c033,amazon,test,25506,1683,38347,0,0
+congo_r001_c070,congo,test,9582,3646,52308,0,322
+congo_r002_c071,congo,test,17105,819,47612,0,0
+congo_r005_c008,congo,test,44618,5267,15651,0,0
+congo_r006_c016,congo,test,65487,0,49,0,0
+congo_r024_c002,congo,test,58465,1772,5299,0,0
+congo_r025_c080,congo,test,11157,10781,43598,0,0
+congo_r080_c075,congo,test,26577,15477,23482,0,0
+congo_r081_c085,congo,test,23089,5359,37088,0,0

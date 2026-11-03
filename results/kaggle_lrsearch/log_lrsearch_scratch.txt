@@ -1,0 +1,623 @@
+device: cuda:0 (Tesla T4)
+results go to: /kaggle/working/results
+8 runs to do
+loading patches into memory...
+    amazon_train: 500/1515 patches loaded
+    amazon_train: 1000/1515 patches loaded
+    amazon_train: 1500/1515 patches loaded
+  amazon_train: 1515 patches in memory (2.68 GB)
+  amazon_val: 311 patches in memory (0.55 GB)
+  amazon_test: 308 patches in memory (0.54 GB)
+    congo_test: 500/766 patches loaded
+  congo_test: 766 patches in memory (1.36 GB)
+
+=== lrsearch_scratch_lr5e-05_f0.05_s0: 76 training patches (13.8% of valid pixels cleared) ===
+  step 50/3000  loss 1.5274  lr 1.70e-05  22 img/s
+  step 100/3000  loss 1.0734  lr 3.37e-05  37 img/s
+  step 150/3000  loss 0.8620  lr 5.00e-05  48 img/s
+  step 200/3000  loss 0.7007  lr 5.00e-05  57 img/s
+  step 250/3000  loss 0.6066  lr 4.98e-05  64 img/s
+  [eval] step 250: val IoU 0.3919 at threshold 0.586 (IoU 0.3902 at 0.5)  AP 0.6385  (best so far)
+  step 300/3000  loss 0.5208  lr 4.97e-05  67 img/s
+  step 350/3000  loss 0.4712  lr 4.94e-05  72 img/s
+  step 400/3000  loss 0.3967  lr 4.91e-05  75 img/s
+  step 450/3000  loss 0.3422  lr 4.86e-05  79 img/s
+  step 500/3000  loss 0.3130  lr 4.82e-05  82 img/s
+  [eval] step 500: val IoU 0.4215 at threshold 0.501 (IoU 0.4215 at 0.5)  AP 0.6633  (best so far)
+  step 550/3000  loss 0.2861  lr 4.76e-05  83 img/s
+  step 600/3000  loss 0.2496  lr 4.70e-05  85 img/s
+  step 650/3000  loss 0.2580  lr 4.63e-05  87 img/s
+  step 700/3000  loss 0.2324  lr 4.55e-05  89 img/s
+  step 750/3000  loss 0.2010  lr 4.47e-05  90 img/s
+  [eval] step 750: val IoU 0.4397 at threshold 0.577 (IoU 0.4391 at 0.5)  AP 0.6824  (best so far)
+  step 800/3000  loss 0.1736  lr 4.39e-05  91 img/s
+  step 850/3000  loss 0.1869  lr 4.29e-05  92 img/s
+  step 900/3000  loss 0.1848  lr 4.19e-05  93 img/s
+  step 950/3000  loss 0.1637  lr 4.09e-05  94 img/s
+  step 1000/3000  loss 0.1673  lr 3.98e-05  95 img/s
+  [eval] step 1000: val IoU 0.3742 at threshold 0.039 (IoU 0.3539 at 0.5)  AP 0.5835
+  step 1050/3000  loss 0.1460  lr 3.87e-05  95 img/s
+  step 1100/3000  loss 0.1534  lr 3.75e-05  96 img/s
+  step 1150/3000  loss 0.1391  lr 3.63e-05  97 img/s
+  step 1200/3000  loss 0.1313  lr 3.50e-05  98 img/s
+  step 1250/3000  loss 0.1370  lr 3.38e-05  98 img/s
+  [eval] step 1250: val IoU 0.3767 at threshold 0.056 (IoU 0.3619 at 0.5)  AP 0.5767
+  step 1300/3000  loss 0.1338  lr 3.25e-05  99 img/s
+  step 1350/3000  loss 0.1255  lr 3.11e-05  99 img/s
+  step 1400/3000  loss 0.1240  lr 2.98e-05  100 img/s
+  step 1450/3000  loss 0.1162  lr 2.84e-05  100 img/s
+  step 1500/3000  loss 0.1092  lr 2.71e-05  101 img/s
+  [eval] step 1500: val IoU 0.3956 at threshold 0.036 (IoU 0.3616 at 0.5)  AP 0.6154
+  step 1550/3000  loss 0.1090  lr 2.57e-05  101 img/s
+  step 1600/3000  loss 0.1021  lr 2.43e-05  101 img/s
+  step 1650/3000  loss 0.1137  lr 2.29e-05  102 img/s
+  step 1700/3000  loss 0.1041  lr 2.16e-05  102 img/s
+  step 1750/3000  loss 0.1173  lr 2.02e-05  102 img/s
+  [eval] step 1750: val IoU 0.3955 at threshold 0.094 (IoU 0.3804 at 0.5)  AP 0.6089
+  step 1800/3000  loss 0.1025  lr 1.89e-05  102 img/s
+  step 1850/3000  loss 0.1009  lr 1.75e-05  103 img/s
+  step 1900/3000  loss 0.1054  lr 1.62e-05  103 img/s
+  step 1950/3000  loss 0.1001  lr 1.50e-05  103 img/s
+  step 2000/3000  loss 0.0972  lr 1.37e-05  104 img/s
+  [eval] step 2000: val IoU 0.4136 at threshold 0.135 (IoU 0.3993 at 0.5)  AP 0.6383
+  step 2050/3000  loss 0.0973  lr 1.25e-05  104 img/s
+  step 2100/3000  loss 0.0946  lr 1.13e-05  104 img/s
+  step 2150/3000  loss 0.1000  lr 1.02e-05  104 img/s
+  step 2200/3000  loss 0.0881  lr 9.11e-06  105 img/s
+  step 2250/3000  loss 0.0921  lr 8.07e-06  105 img/s
+  [eval] step 2250: val IoU 0.4055 at threshold 0.110 (IoU 0.3907 at 0.5)  AP 0.6149
+  step 2300/3000  loss 0.0900  lr 7.08e-06  105 img/s
+  step 2350/3000  loss 0.0887  lr 6.15e-06  105 img/s
+  step 2400/3000  loss 0.0873  lr 5.27e-06  105 img/s
+  step 2450/3000  loss 0.0865  lr 4.46e-06  105 img/s
+  step 2500/3000  loss 0.0850  lr 3.70e-06  106 img/s
+  [eval] step 2500: val IoU 0.4027 at threshold 0.074 (IoU 0.3850 at 0.5)  AP 0.6101
+  step 2550/3000  loss 0.0881  lr 3.01e-06  106 img/s
+  step 2600/3000  loss 0.0838  lr 2.39e-06  106 img/s
+  step 2650/3000  loss 0.0894  lr 1.84e-06  106 img/s
+  step 2700/3000  loss 0.0838  lr 1.35e-06  106 img/s
+  step 2750/3000  loss 0.0921  lr 9.43e-07  106 img/s
+  [eval] step 2750: val IoU 0.4045 at threshold 0.075 (IoU 0.3891 at 0.5)  AP 0.6137
+  step 2800/3000  loss 0.0872  lr 6.05e-07  106 img/s
+  step 2850/3000  loss 0.0839  lr 3.41e-07  106 img/s
+  step 2900/3000  loss 0.0846  lr 1.52e-07  107 img/s
+  step 2950/3000  loss 0.0849  lr 3.80e-08  107 img/s
+  step 3000/3000  loss 0.0869  lr 0.00e+00  107 img/s
+  [eval] step 3000: val IoU 0.4059 at threshold 0.131 (IoU 0.3933 at 0.5)  AP 0.6148
+  done in 7.5 min (best step 750, threshold 0.577): amazon_val IoU 0.4397 AP 0.6824  amazon_test IoU 0.4465 AP 0.6998  congo_test IoU 0.0707 AP 0.1497
+
+=== lrsearch_scratch_lr5e-05_f1_s0: 1515 training patches (9.8% of valid pixels cleared) ===
+  step 50/3000  loss 1.5954  lr 1.70e-05  118 img/s
+  step 100/3000  loss 1.2569  lr 3.37e-05  118 img/s
+  step 150/3000  loss 1.0330  lr 5.00e-05  118 img/s
+  step 200/3000  loss 0.9397  lr 5.00e-05  118 img/s
+  step 250/3000  loss 0.8768  lr 4.98e-05  118 img/s
+  [eval] step 250: val IoU 0.4346 at threshold 0.745 (IoU 0.4105 at 0.5)  AP 0.6805  (best so far)
+  step 300/3000  loss 0.7982  lr 4.97e-05  115 img/s
+  step 350/3000  loss 0.7403  lr 4.94e-05  115 img/s
+  step 400/3000  loss 0.7061  lr 4.91e-05  115 img/s
+  step 450/3000  loss 0.7181  lr 4.86e-05  116 img/s
+  step 500/3000  loss 0.6205  lr 4.82e-05  116 img/s
+  [eval] step 500: val IoU 0.5101 at threshold 0.711 (IoU 0.4775 at 0.5)  AP 0.7658  (best so far)
+  step 550/3000  loss 0.6060  lr 4.76e-05  114 img/s
+  step 600/3000  loss 0.6028  lr 4.70e-05  115 img/s
+  step 650/3000  loss 0.5742  lr 4.63e-05  115 img/s
+  step 700/3000  loss 0.5836  lr 4.55e-05  115 img/s
+  step 750/3000  loss 0.5607  lr 4.47e-05  115 img/s
+  [eval] step 750: val IoU 0.4833 at threshold 0.333 (IoU 0.4460 at 0.5)  AP 0.7512
+  step 800/3000  loss 0.5501  lr 4.39e-05  114 img/s
+  step 850/3000  loss 0.5271  lr 4.29e-05  114 img/s
+  step 900/3000  loss 0.5754  lr 4.19e-05  115 img/s
+  step 950/3000  loss 0.5316  lr 4.09e-05  115 img/s
+  step 1000/3000  loss 0.5578  lr 3.98e-05  115 img/s
+  [eval] step 1000: val IoU 0.5389 at threshold 0.160 (IoU 0.4903 at 0.5)  AP 0.7920  (best so far)
+  step 1050/3000  loss 0.4770  lr 3.87e-05  114 img/s
+  step 1100/3000  loss 0.5109  lr 3.75e-05  114 img/s
+  step 1150/3000  loss 0.4905  lr 3.63e-05  114 img/s
+  step 1200/3000  loss 0.5236  lr 3.50e-05  115 img/s
+  step 1250/3000  loss 0.4917  lr 3.38e-05  115 img/s
+  [eval] step 1250: val IoU 0.4810 at threshold 0.975 (IoU 0.4288 at 0.5)  AP 0.7051
+  step 1300/3000  loss 0.4702  lr 3.25e-05  114 img/s
+  step 1350/3000  loss 0.5069  lr 3.11e-05  114 img/s
+  step 1400/3000  loss 0.4580  lr 2.98e-05  114 img/s
+  step 1450/3000  loss 0.4878  lr 2.84e-05  115 img/s
+  step 1500/3000  loss 0.4655  lr 2.71e-05  115 img/s
+  [eval] step 1500: val IoU 0.5544 at threshold 0.945 (IoU 0.4505 at 0.5)  AP 0.8005  (best so far)
+  step 1550/3000  loss 0.4707  lr 2.57e-05  114 img/s
+  step 1600/3000  loss 0.4258  lr 2.43e-05  114 img/s
+  step 1650/3000  loss 0.4566  lr 2.29e-05  114 img/s
+  step 1700/3000  loss 0.4416  lr 2.16e-05  115 img/s
+  step 1750/3000  loss 0.4369  lr 2.02e-05  115 img/s
+  [eval] step 1750: val IoU 0.5677 at threshold 0.247 (IoU 0.5524 at 0.5)  AP 0.8086  (best so far)
+  step 1800/3000  loss 0.4419  lr 1.89e-05  114 img/s
+  step 1850/3000  loss 0.4157  lr 1.75e-05  114 img/s
+  step 1900/3000  loss 0.4229  lr 1.62e-05  114 img/s
+  step 1950/3000  loss 0.4168  lr 1.50e-05  114 img/s
+  step 2000/3000  loss 0.4425  lr 1.37e-05  115 img/s
+  [eval] step 2000: val IoU 0.5982 at threshold 0.385 (IoU 0.5964 at 0.5)  AP 0.8350  (best so far)
+  step 2050/3000  loss 0.4262  lr 1.25e-05  114 img/s
+  step 2100/3000  loss 0.4092  lr 1.13e-05  114 img/s
+  step 2150/3000  loss 0.4078  lr 1.02e-05  114 img/s
+  step 2200/3000  loss 0.4157  lr 9.11e-06  114 img/s
+  step 2250/3000  loss 0.4232  lr 8.07e-06  114 img/s
+  [eval] step 2250: val IoU 0.5653 at threshold 0.705 (IoU 0.5594 at 0.5)  AP 0.8131
+  step 2300/3000  loss 0.4233  lr 7.08e-06  114 img/s
+  step 2350/3000  loss 0.4253  lr 6.15e-06  114 img/s
+  step 2400/3000  loss 0.4028  lr 5.27e-06  114 img/s
+  step 2450/3000  loss 0.4027  lr 4.46e-06  114 img/s
+  step 2500/3000  loss 0.4145  lr 3.70e-06  114 img/s
+  [eval] step 2500: val IoU 0.6040 at threshold 0.394 (IoU 0.6023 at 0.5)  AP 0.8429  (best so far)
+  step 2550/3000  loss 0.3852  lr 3.01e-06  114 img/s
+  step 2600/3000  loss 0.4069  lr 2.39e-06  114 img/s
+  step 2650/3000  loss 0.3794  lr 1.84e-06  114 img/s
+  step 2700/3000  loss 0.3822  lr 1.35e-06  114 img/s
+  step 2750/3000  loss 0.3978  lr 9.43e-07  114 img/s
+  [eval] step 2750: val IoU 0.5933 at threshold 0.294 (IoU 0.5871 at 0.5)  AP 0.8335
+  step 2800/3000  loss 0.3681  lr 6.05e-07  114 img/s
+  step 2850/3000  loss 0.3983  lr 3.41e-07  114 img/s
+  step 2900/3000  loss 0.3980  lr 1.52e-07  114 img/s
+  step 2950/3000  loss 0.4026  lr 3.80e-08  114 img/s
+  step 3000/3000  loss 0.4077  lr 0.00e+00  114 img/s
+  [eval] step 3000: val IoU 0.5938 at threshold 0.355 (IoU 0.5914 at 0.5)  AP 0.8354
+  done in 7.0 min (best step 2500, threshold 0.394): amazon_val IoU 0.6040 AP 0.8429  amazon_test IoU 0.6289 AP 0.8639  congo_test IoU 0.1798 AP 0.2692
+
+=== lrsearch_scratch_lr0.0001_f0.05_s0: 76 training patches (13.8% of valid pixels cleared) ===
+  step 50/3000  loss 1.4206  lr 3.40e-05  118 img/s
+  step 100/3000  loss 0.9388  lr 6.73e-05  118 img/s
+  step 150/3000  loss 0.7211  lr 1.00e-04  118 img/s
+  step 200/3000  loss 0.5483  lr 9.99e-05  118 img/s
+  step 250/3000  loss 0.4383  lr 9.97e-05  118 img/s
+  [eval] step 250: val IoU 0.4130 at threshold 0.556 (IoU 0.4125 at 0.5)  AP 0.6483  (best so far)
+  step 300/3000  loss 0.3638  lr 9.93e-05  115 img/s
+  step 350/3000  loss 0.3407  lr 9.88e-05  115 img/s
+  step 400/3000  loss 0.2734  lr 9.81e-05  116 img/s
+  step 450/3000  loss 0.2300  lr 9.73e-05  116 img/s
+  step 500/3000  loss 0.2195  lr 9.63e-05  116 img/s
+  [eval] step 500: val IoU 0.3924 at threshold 0.059 (IoU 0.3126 at 0.5)  AP 0.6296
+  step 550/3000  loss 0.2096  lr 9.52e-05  114 img/s
+  step 600/3000  loss 0.1732  lr 9.40e-05  115 img/s
+  step 650/3000  loss 0.1780  lr 9.26e-05  115 img/s
+  step 700/3000  loss 0.1627  lr 9.11e-05  115 img/s
+  step 750/3000  loss 0.1416  lr 8.95e-05  115 img/s
+  [eval] step 750: val IoU 0.4412 at threshold 0.355 (IoU 0.4410 at 0.5)  AP 0.6821  (best so far)
+  step 800/3000  loss 0.1221  lr 8.77e-05  114 img/s
+  step 850/3000  loss 0.1284  lr 8.58e-05  115 img/s
+  step 900/3000  loss 0.1310  lr 8.39e-05  115 img/s
+  step 950/3000  loss 0.1172  lr 8.18e-05  115 img/s
+  step 1000/3000  loss 0.1199  lr 7.96e-05  115 img/s
+  [eval] step 1000: val IoU 0.4133 at threshold 0.123 (IoU 0.4012 at 0.5)  AP 0.6179
+  step 1050/3000  loss 0.1060  lr 7.73e-05  114 img/s
+  step 1100/3000  loss 0.1106  lr 7.50e-05  114 img/s
+  step 1150/3000  loss 0.0999  lr 7.26e-05  115 img/s
+  step 1200/3000  loss 0.0942  lr 7.01e-05  115 img/s
+  step 1250/3000  loss 0.0999  lr 6.75e-05  115 img/s
+  [eval] step 1250: val IoU 0.4162 at threshold 0.073 (IoU 0.3937 at 0.5)  AP 0.6531
+  step 1300/3000  loss 0.0965  lr 6.49e-05  114 img/s
+  step 1350/3000  loss 0.0914  lr 6.23e-05  114 img/s
+  step 1400/3000  loss 0.0886  lr 5.96e-05  114 img/s
+  step 1450/3000  loss 0.0844  lr 5.69e-05  115 img/s
+  step 1500/3000  loss 0.0790  lr 5.41e-05  115 img/s
+  [eval] step 1500: val IoU 0.4305 at threshold 0.122 (IoU 0.4182 at 0.5)  AP 0.6530
+  step 1550/3000  loss 0.0778  lr 5.14e-05  114 img/s
+  step 1600/3000  loss 0.0736  lr 4.86e-05  114 img/s
+  step 1650/3000  loss 0.0795  lr 4.59e-05  114 img/s
+  step 1700/3000  loss 0.0746  lr 4.31e-05  114 img/s
+  step 1750/3000  loss 0.0811  lr 4.04e-05  115 img/s
+  [eval] step 1750: val IoU 0.4281 at threshold 0.129 (IoU 0.4206 at 0.5)  AP 0.6311
+  step 1800/3000  loss 0.0720  lr 3.77e-05  114 img/s
+  step 1850/3000  loss 0.0705  lr 3.51e-05  114 img/s
+  step 1900/3000  loss 0.0738  lr 3.25e-05  114 img/s
+  step 1950/3000  loss 0.0687  lr 2.99e-05  114 img/s
+  step 2000/3000  loss 0.0678  lr 2.74e-05  114 img/s
+  [eval] step 2000: val IoU 0.4333 at threshold 0.056 (IoU 0.4130 at 0.5)  AP 0.6602
+  step 2050/3000  loss 0.0668  lr 2.50e-05  114 img/s
+  step 2100/3000  loss 0.0647  lr 2.27e-05  114 img/s
+  step 2150/3000  loss 0.0685  lr 2.04e-05  114 img/s
+  step 2200/3000  loss 0.0616  lr 1.82e-05  114 img/s
+  step 2250/3000  loss 0.0632  lr 1.61e-05  114 img/s
+  [eval] step 2250: val IoU 0.4206 at threshold 0.040 (IoU 0.3940 at 0.5)  AP 0.6385
+  step 2300/3000  loss 0.0613  lr 1.42e-05  114 img/s
+  step 2350/3000  loss 0.0601  lr 1.23e-05  114 img/s
+  step 2400/3000  loss 0.0593  lr 1.05e-05  114 img/s
+  step 2450/3000  loss 0.0589  lr 8.91e-06  114 img/s
+  step 2500/3000  loss 0.0571  lr 7.40e-06  114 img/s
+  [eval] step 2500: val IoU 0.4080 at threshold 0.018 (IoU 0.3836 at 0.5)  AP 0.6166
+  step 2550/3000  loss 0.0594  lr 6.03e-06  114 img/s
+  step 2600/3000  loss 0.0563  lr 4.78e-06  114 img/s
+  step 2650/3000  loss 0.0594  lr 3.68e-06  114 img/s
+  step 2700/3000  loss 0.0563  lr 2.71e-06  114 img/s
+  step 2750/3000  loss 0.0615  lr 1.89e-06  114 img/s
+  [eval] step 2750: val IoU 0.4168 at threshold 0.043 (IoU 0.3948 at 0.5)  AP 0.6275
+  step 2800/3000  loss 0.0583  lr 1.21e-06  114 img/s
+  step 2850/3000  loss 0.0563  lr 6.82e-07  114 img/s
+  step 2900/3000  loss 0.0564  lr 3.03e-07  114 img/s
+  step 2950/3000  loss 0.0568  lr 7.59e-08  114 img/s
+  step 3000/3000  loss 0.0584  lr 0.00e+00  114 img/s
+  [eval] step 3000: val IoU 0.4186 at threshold 0.042 (IoU 0.3962 at 0.5)  AP 0.6276
+  done in 7.0 min (best step 750, threshold 0.355): amazon_val IoU 0.4412 AP 0.6821  amazon_test IoU 0.4272 AP 0.6642  congo_test IoU 0.0247 AP 0.1218
+
+=== lrsearch_scratch_lr0.0001_f1_s0: 1515 training patches (9.8% of valid pixels cleared) ===
+  step 50/3000  loss 1.5025  lr 3.40e-05  118 img/s
+  step 100/3000  loss 1.1422  lr 6.73e-05  118 img/s
+  step 150/3000  loss 0.9048  lr 1.00e-04  118 img/s
+  step 200/3000  loss 0.8313  lr 9.99e-05  118 img/s
+  step 250/3000  loss 0.7596  lr 9.97e-05  118 img/s
+  [eval] step 250: val IoU 0.4213 at threshold 0.160 (IoU 0.2833 at 0.5)  AP 0.6546  (best so far)
+  step 300/3000  loss 0.6879  lr 9.93e-05  114 img/s
+  step 350/3000  loss 0.6420  lr 9.88e-05  115 img/s
+  step 400/3000  loss 0.6303  lr 9.81e-05  115 img/s
+  step 450/3000  loss 0.6391  lr 9.73e-05  116 img/s
+  step 500/3000  loss 0.5633  lr 9.63e-05  116 img/s
+  [eval] step 500: val IoU 0.4501 at threshold 0.916 (IoU 0.4195 at 0.5)  AP 0.6934  (best so far)
+  step 550/3000  loss 0.5551  lr 9.52e-05  114 img/s
+  step 600/3000  loss 0.5616  lr 9.40e-05  114 img/s
+  step 650/3000  loss 0.5251  lr 9.26e-05  115 img/s
+  step 700/3000  loss 0.5454  lr 9.11e-05  115 img/s
+  step 750/3000  loss 0.5054  lr 8.95e-05  115 img/s
+  [eval] step 750: val IoU 0.5572 at threshold 0.130 (IoU 0.5108 at 0.5)  AP 0.8045  (best so far)
+  step 800/3000  loss 0.5141  lr 8.77e-05  114 img/s
+  step 850/3000  loss 0.4931  lr 8.58e-05  114 img/s
+  step 900/3000  loss 0.5305  lr 8.39e-05  114 img/s
+  step 950/3000  loss 0.4998  lr 8.18e-05  115 img/s
+  step 1000/3000  loss 0.5203  lr 7.96e-05  115 img/s
+  [eval] step 1000: val IoU 0.4166 at threshold 0.021 (IoU 0.1618 at 0.5)  AP 0.6450
+  step 1050/3000  loss 0.4694  lr 7.73e-05  114 img/s
+  step 1100/3000  loss 0.5110  lr 7.50e-05  114 img/s
+  step 1150/3000  loss 0.4797  lr 7.26e-05  114 img/s
+  step 1200/3000  loss 0.5269  lr 7.01e-05  115 img/s
+  step 1250/3000  loss 0.4809  lr 6.75e-05  115 img/s
+  [eval] step 1250: val IoU 0.5451 at threshold 0.717 (IoU 0.5350 at 0.5)  AP 0.7946
+  step 1300/3000  loss 0.4555  lr 6.49e-05  114 img/s
+  step 1350/3000  loss 0.4905  lr 6.23e-05  114 img/s
+  step 1400/3000  loss 0.4473  lr 5.96e-05  114 img/s
+  step 1450/3000  loss 0.4545  lr 5.69e-05  114 img/s
+  step 1500/3000  loss 0.4425  lr 5.41e-05  115 img/s
+  [eval] step 1500: val IoU 0.5226 at threshold 0.925 (IoU 0.4917 at 0.5)  AP 0.7690
+  step 1550/3000  loss 0.4546  lr 5.14e-05  114 img/s
+  step 1600/3000  loss 0.4139  lr 4.86e-05  114 img/s
+  step 1650/3000  loss 0.4414  lr 4.59e-05  114 img/s
+  step 1700/3000  loss 0.4184  lr 4.31e-05  114 img/s
+  step 1750/3000  loss 0.4201  lr 4.04e-05  114 img/s
+  [eval] step 1750: val IoU 0.5946 at threshold 0.083 (IoU 0.5296 at 0.5)  AP 0.8373  (best so far)
+  step 1800/3000  loss 0.4267  lr 3.77e-05  114 img/s
+  step 1850/3000  loss 0.4070  lr 3.51e-05  114 img/s
+  step 1900/3000  loss 0.4159  lr 3.25e-05  114 img/s
+  step 1950/3000  loss 0.4089  lr 2.99e-05  114 img/s
+  step 2000/3000  loss 0.4423  lr 2.74e-05  114 img/s
+  [eval] step 2000: val IoU 0.6220 at threshold 0.166 (IoU 0.5974 at 0.5)  AP 0.8553  (best so far)
+  step 2050/3000  loss 0.4142  lr 2.50e-05  114 img/s
+  step 2100/3000  loss 0.3956  lr 2.27e-05  114 img/s
+  step 2150/3000  loss 0.3988  lr 2.04e-05  114 img/s
+  step 2200/3000  loss 0.4017  lr 1.82e-05  114 img/s
+  step 2250/3000  loss 0.4177  lr 1.61e-05  114 img/s
+  [eval] step 2250: val IoU 0.5913 at threshold 0.617 (IoU 0.5898 at 0.5)  AP 0.8278
+  step 2300/3000  loss 0.4136  lr 1.42e-05  114 img/s
+  step 2350/3000  loss 0.4144  lr 1.23e-05  114 img/s
+  step 2400/3000  loss 0.3899  lr 1.05e-05  114 img/s
+  step 2450/3000  loss 0.3947  lr 8.91e-06  114 img/s
+  step 2500/3000  loss 0.4015  lr 7.40e-06  114 img/s
+  [eval] step 2500: val IoU 0.6067 at threshold 0.240 (IoU 0.5980 at 0.5)  AP 0.8429
+  step 2550/3000  loss 0.3754  lr 6.03e-06  114 img/s
+  step 2600/3000  loss 0.3965  lr 4.78e-06  114 img/s
+  step 2650/3000  loss 0.3681  lr 3.68e-06  114 img/s
+  step 2700/3000  loss 0.3660  lr 2.71e-06  114 img/s
+  step 2750/3000  loss 0.3899  lr 1.89e-06  114 img/s
+  [eval] step 2750: val IoU 0.6112 at threshold 0.315 (IoU 0.6077 at 0.5)  AP 0.8476
+  step 2800/3000  loss 0.3552  lr 1.21e-06  114 img/s
+  step 2850/3000  loss 0.3898  lr 6.82e-07  114 img/s
+  step 2900/3000  loss 0.3856  lr 3.03e-07  114 img/s
+  step 2950/3000  loss 0.3884  lr 7.59e-08  114 img/s
+  step 3000/3000  loss 0.3942  lr 0.00e+00  114 img/s
+  [eval] step 3000: val IoU 0.6097 at threshold 0.346 (IoU 0.6076 at 0.5)  AP 0.8455
+  done in 7.0 min (best step 2000, threshold 0.166): amazon_val IoU 0.6220 AP 0.8553  amazon_test IoU 0.6072 AP 0.8521  congo_test IoU 0.0574 AP 0.1753
+
+=== lrsearch_scratch_lr0.0002_f0.05_s0: 76 training patches (13.8% of valid pixels cleared) ===
+  step 50/3000  loss 1.3040  lr 6.80e-05  118 img/s
+  step 100/3000  loss 0.8093  lr 1.35e-04  118 img/s
+  step 150/3000  loss 0.6144  lr 2.00e-04  118 img/s
+  step 200/3000  loss 0.4294  lr 2.00e-04  118 img/s
+  step 250/3000  loss 0.3488  lr 1.99e-04  118 img/s
+  [eval] step 250: val IoU 0.3564 at threshold 0.022 (IoU 0.1322 at 0.5)  AP 0.5594  (best so far)
+  step 300/3000  loss 0.3139  lr 1.99e-04  115 img/s
+  step 350/3000  loss 0.3091  lr 1.98e-04  115 img/s
+  step 400/3000  loss 0.2303  lr 1.96e-04  115 img/s
+  step 450/3000  loss 0.2324  lr 1.95e-04  116 img/s
+  step 500/3000  loss 0.1976  lr 1.93e-04  116 img/s
+  [eval] step 500: val IoU 0.4239 at threshold 0.094 (IoU 0.3701 at 0.5)  AP 0.6704  (best so far)
+  step 550/3000  loss 0.1817  lr 1.90e-04  114 img/s
+  step 600/3000  loss 0.1543  lr 1.88e-04  114 img/s
+  step 650/3000  loss 0.1642  lr 1.85e-04  115 img/s
+  step 700/3000  loss 0.1505  lr 1.82e-04  115 img/s
+  step 750/3000  loss 0.1298  lr 1.79e-04  115 img/s
+  [eval] step 750: val IoU 0.4757 at threshold 0.081 (IoU 0.4506 at 0.5)  AP 0.7141  (best so far)
+  step 800/3000  loss 0.1085  lr 1.75e-04  114 img/s
+  step 850/3000  loss 0.1171  lr 1.72e-04  114 img/s
+  step 900/3000  loss 0.1237  lr 1.68e-04  114 img/s
+  step 950/3000  loss 0.1069  lr 1.64e-04  115 img/s
+  step 1000/3000  loss 0.1053  lr 1.59e-04  115 img/s
+  [eval] step 1000: val IoU 0.4400 at threshold 0.029 (IoU 0.3942 at 0.5)  AP 0.6508
+  step 1050/3000  loss 0.0928  lr 1.55e-04  114 img/s
+  step 1100/3000  loss 0.0967  lr 1.50e-04  114 img/s
+  step 1150/3000  loss 0.0858  lr 1.45e-04  114 img/s
+  step 1200/3000  loss 0.0808  lr 1.40e-04  114 img/s
+  step 1250/3000  loss 0.0833  lr 1.35e-04  115 img/s
+  [eval] step 1250: val IoU 0.4304 at threshold 0.037 (IoU 0.4097 at 0.5)  AP 0.6307
+  step 1300/3000  loss 0.0816  lr 1.30e-04  114 img/s
+  step 1350/3000  loss 0.0772  lr 1.25e-04  114 img/s
+  step 1400/3000  loss 0.0731  lr 1.19e-04  114 img/s
+  step 1450/3000  loss 0.0693  lr 1.14e-04  114 img/s
+  step 1500/3000  loss 0.0634  lr 1.08e-04  114 img/s
+  [eval] step 1500: val IoU 0.4386 at threshold 0.024 (IoU 0.4072 at 0.5)  AP 0.6405
+  step 1550/3000  loss 0.0637  lr 1.03e-04  114 img/s
+  step 1600/3000  loss 0.0604  lr 9.72e-05  114 img/s
+  step 1650/3000  loss 0.0647  lr 9.17e-05  114 img/s
+  step 1700/3000  loss 0.0604  lr 8.63e-05  114 img/s
+  step 1750/3000  loss 0.0676  lr 8.08e-05  114 img/s
+  [eval] step 1750: val IoU 0.4767 at threshold 0.072 (IoU 0.4634 at 0.5)  AP 0.6752  (best so far)
+  step 1800/3000  loss 0.0578  lr 7.55e-05  114 img/s
+  step 1850/3000  loss 0.0558  lr 7.01e-05  114 img/s
+  step 1900/3000  loss 0.0567  lr 6.49e-05  114 img/s
+  step 1950/3000  loss 0.0529  lr 5.98e-05  114 img/s
+  step 2000/3000  loss 0.0529  lr 5.48e-05  114 img/s
+  [eval] step 2000: val IoU 0.4797 at threshold 0.063 (IoU 0.4699 at 0.5)  AP 0.6785  (best so far)
+  step 2050/3000  loss 0.0508  lr 5.00e-05  114 img/s
+  step 2100/3000  loss 0.0494  lr 4.53e-05  114 img/s
+  step 2150/3000  loss 0.0516  lr 4.08e-05  114 img/s
+  step 2200/3000  loss 0.0466  lr 3.64e-05  114 img/s
+  step 2250/3000  loss 0.0473  lr 3.23e-05  114 img/s
+  [eval] step 2250: val IoU 0.4692 at threshold 0.018 (IoU 0.4371 at 0.5)  AP 0.6545
+  step 2300/3000  loss 0.0458  lr 2.83e-05  114 img/s
+  step 2350/3000  loss 0.0452  lr 2.46e-05  114 img/s
+  step 2400/3000  loss 0.0438  lr 2.11e-05  114 img/s
+  step 2450/3000  loss 0.0438  lr 1.78e-05  114 img/s
+  step 2500/3000  loss 0.0422  lr 1.48e-05  114 img/s
+  [eval] step 2500: val IoU 0.4671 at threshold 0.016 (IoU 0.4389 at 0.5)  AP 0.6497
+  step 2550/3000  loss 0.0431  lr 1.21e-05  114 img/s
+  step 2600/3000  loss 0.0411  lr 9.56e-06  114 img/s
+  step 2650/3000  loss 0.0436  lr 7.35e-06  114 img/s
+  step 2700/3000  loss 0.0410  lr 5.42e-06  114 img/s
+  step 2750/3000  loss 0.0444  lr 3.77e-06  114 img/s
+  [eval] step 2750: val IoU 0.4740 at threshold 0.021 (IoU 0.4494 at 0.5)  AP 0.6578
+  step 2800/3000  loss 0.0429  lr 2.42e-06  114 img/s
+  step 2850/3000  loss 0.0413  lr 1.36e-06  114 img/s
+  step 2900/3000  loss 0.0411  lr 6.07e-07  114 img/s
+  step 2950/3000  loss 0.0410  lr 1.52e-07  114 img/s
+  step 3000/3000  loss 0.0425  lr 0.00e+00  114 img/s
+  [eval] step 3000: val IoU 0.4754 at threshold 0.024 (IoU 0.4555 at 0.5)  AP 0.6579
+  done in 7.0 min (best step 2000, threshold 0.063): amazon_val IoU 0.4798 AP 0.6785  amazon_test IoU 0.4255 AP 0.6173  congo_test IoU 0.0376 AP 0.1659
+
+=== lrsearch_scratch_lr0.0002_f1_s0: 1515 training patches (9.8% of valid pixels cleared) ===
+  step 50/3000  loss 1.3988  lr 6.80e-05  117 img/s
+  step 100/3000  loss 1.0365  lr 1.35e-04  117 img/s
+  step 150/3000  loss 0.7822  lr 2.00e-04  117 img/s
+  step 200/3000  loss 0.7425  lr 2.00e-04  117 img/s
+  step 250/3000  loss 0.6820  lr 1.99e-04  117 img/s
+  [eval] step 250: val IoU 0.4370 at threshold 0.132 (IoU 0.3158 at 0.5)  AP 0.6648  (best so far)
+  step 300/3000  loss 0.6542  lr 1.99e-04  114 img/s
+  step 350/3000  loss 0.6126  lr 1.98e-04  114 img/s
+  step 400/3000  loss 0.6050  lr 1.96e-04  114 img/s
+  step 450/3000  loss 0.6130  lr 1.95e-04  115 img/s
+  step 500/3000  loss 0.5267  lr 1.93e-04  115 img/s
+  [eval] step 500: val IoU 0.4253 at threshold 0.096 (IoU 0.3401 at 0.5)  AP 0.6911
+  step 550/3000  loss 0.5160  lr 1.90e-04  113 img/s
+  step 600/3000  loss 0.5246  lr 1.88e-04  114 img/s
+  step 650/3000  loss 0.4970  lr 1.85e-04  114 img/s
+  step 700/3000  loss 0.5230  lr 1.82e-04  114 img/s
+  step 750/3000  loss 0.5003  lr 1.79e-04  114 img/s
+  [eval] step 750: val IoU 0.5582 at threshold 0.318 (IoU 0.5504 at 0.5)  AP 0.8094  (best so far)
+  step 800/3000  loss 0.5042  lr 1.75e-04  113 img/s
+  step 850/3000  loss 0.4850  lr 1.72e-04  114 img/s
+  step 900/3000  loss 0.5337  lr 1.68e-04  114 img/s
+  step 950/3000  loss 0.5095  lr 1.64e-04  114 img/s
+  step 1000/3000  loss 0.5103  lr 1.59e-04  114 img/s
+  [eval] step 1000: val IoU 0.3607 at threshold 0.017 (IoU 0.0466 at 0.5)  AP 0.5151
+  step 1050/3000  loss 0.4419  lr 1.55e-04  113 img/s
+  step 1100/3000  loss 0.4856  lr 1.50e-04  113 img/s
+  step 1150/3000  loss 0.4751  lr 1.45e-04  114 img/s
+  step 1200/3000  loss 0.5011  lr 1.40e-04  114 img/s
+  step 1250/3000  loss 0.4636  lr 1.35e-04  114 img/s
+  [eval] step 1250: val IoU 0.5228 at threshold 0.328 (IoU 0.5121 at 0.5)  AP 0.7796
+  step 1300/3000  loss 0.4434  lr 1.30e-04  113 img/s
+  step 1350/3000  loss 0.4770  lr 1.25e-04  113 img/s
+  step 1400/3000  loss 0.4569  lr 1.19e-04  114 img/s
+  step 1450/3000  loss 0.4563  lr 1.14e-04  114 img/s
+  step 1500/3000  loss 0.4377  lr 1.08e-04  114 img/s
+  [eval] step 1500: val IoU 0.4424 at threshold 0.267 (IoU 0.4394 at 0.5)  AP 0.6178
+  step 1550/3000  loss 0.4586  lr 1.03e-04  113 img/s
+  step 1600/3000  loss 0.4119  lr 9.72e-05  113 img/s
+  step 1650/3000  loss 0.4455  lr 9.17e-05  114 img/s
+  step 1700/3000  loss 0.4222  lr 8.63e-05  114 img/s
+  step 1750/3000  loss 0.4212  lr 8.08e-05  114 img/s
+  [eval] step 1750: val IoU 0.5755 at threshold 0.060 (IoU 0.4908 at 0.5)  AP 0.8262  (best so far)
+  step 1800/3000  loss 0.4269  lr 7.55e-05  113 img/s
+  step 1850/3000  loss 0.4147  lr 7.01e-05  113 img/s
+  step 1900/3000  loss 0.4120  lr 6.49e-05  113 img/s
+  step 1950/3000  loss 0.4052  lr 5.98e-05  114 img/s
+  step 2000/3000  loss 0.4461  lr 5.48e-05  114 img/s
+  [eval] step 2000: val IoU 0.6134 at threshold 0.705 (IoU 0.6059 at 0.5)  AP 0.8488  (best so far)
+  step 2050/3000  loss 0.4135  lr 5.00e-05  113 img/s
+  step 2100/3000  loss 0.3946  lr 4.53e-05  113 img/s
+  step 2150/3000  loss 0.3982  lr 4.08e-05  113 img/s
+  step 2200/3000  loss 0.4011  lr 3.64e-05  114 img/s
+  step 2250/3000  loss 0.4155  lr 3.23e-05  114 img/s
+  [eval] step 2250: val IoU 0.6091 at threshold 0.158 (IoU 0.5918 at 0.5)  AP 0.8432
+  step 2300/3000  loss 0.4111  lr 2.83e-05  113 img/s
+  step 2350/3000  loss 0.4116  lr 2.46e-05  113 img/s
+  step 2400/3000  loss 0.3908  lr 2.11e-05  113 img/s
+  step 2450/3000  loss 0.3977  lr 1.78e-05  114 img/s
+  step 2500/3000  loss 0.4047  lr 1.48e-05  114 img/s
+  [eval] step 2500: val IoU 0.6110 at threshold 0.279 (IoU 0.6032 at 0.5)  AP 0.8455
+  step 2550/3000  loss 0.3721  lr 1.21e-05  113 img/s
+  step 2600/3000  loss 0.3944  lr 9.56e-06  113 img/s
+  step 2650/3000  loss 0.3673  lr 7.35e-06  113 img/s
+  step 2700/3000  loss 0.3690  lr 5.42e-06  113 img/s
+  step 2750/3000  loss 0.3889  lr 3.77e-06  114 img/s
+  [eval] step 2750: val IoU 0.6447 at threshold 0.306 (IoU 0.6397 at 0.5)  AP 0.8717  (best so far)
+  step 2800/3000  loss 0.3560  lr 2.42e-06  113 img/s
+  step 2850/3000  loss 0.3922  lr 1.36e-06  113 img/s
+  step 2900/3000  loss 0.3769  lr 6.07e-07  113 img/s
+  step 2950/3000  loss 0.3910  lr 1.52e-07  113 img/s
+  step 3000/3000  loss 0.3945  lr 0.00e+00  113 img/s
+  [eval] step 3000: val IoU 0.6392 at threshold 0.417 (IoU 0.6383 at 0.5)  AP 0.8670
+  done in 7.1 min (best step 2750, threshold 0.306): amazon_val IoU 0.6447 AP 0.8717  amazon_test IoU 0.6551 AP 0.8836  congo_test IoU 0.0944 AP 0.1754
+
+=== lrsearch_scratch_lr0.0005_f0.05_s0: 76 training patches (13.8% of valid pixels cleared) ===
+  step 50/3000  loss 1.1495  lr 1.70e-04  118 img/s
+  step 100/3000  loss 0.6272  lr 3.37e-04  118 img/s
+  step 150/3000  loss 0.4976  lr 5.00e-04  118 img/s
+  step 200/3000  loss 0.4055  lr 5.00e-04  118 img/s
+  step 250/3000  loss 0.3730  lr 4.98e-04  118 img/s
+  [eval] step 250: val IoU 0.4041 at threshold 0.010 (IoU 0.1279 at 0.5)  AP 0.6206  (best so far)
+  step 300/3000  loss 0.3583  lr 4.97e-04  115 img/s
+  step 350/3000  loss 0.3478  lr 4.94e-04  115 img/s
+  step 400/3000  loss 0.2737  lr 4.91e-04  115 img/s
+  step 450/3000  loss 0.2899  lr 4.86e-04  116 img/s
+  step 500/3000  loss 0.2686  lr 4.82e-04  116 img/s
+  [eval] step 500: val IoU 0.4317 at threshold 0.008 (IoU 0.1316 at 0.5)  AP 0.6634  (best so far)
+  step 550/3000  loss 0.2553  lr 4.76e-04  114 img/s
+  step 600/3000  loss 0.2256  lr 4.70e-04  115 img/s
+  step 650/3000  loss 0.2690  lr 4.63e-04  115 img/s
+  step 700/3000  loss 0.2450  lr 4.55e-04  115 img/s
+  step 750/3000  loss 0.2247  lr 4.47e-04  115 img/s
+  [eval] step 750: val IoU 0.5026 at threshold 0.021 (IoU 0.3896 at 0.5)  AP 0.7516  (best so far)
+  step 800/3000  loss 0.1782  lr 4.39e-04  114 img/s
+  step 850/3000  loss 0.1857  lr 4.29e-04  114 img/s
+  step 900/3000  loss 0.2161  lr 4.19e-04  115 img/s
+  step 950/3000  loss 0.1788  lr 4.09e-04  115 img/s
+  step 1000/3000  loss 0.1954  lr 3.98e-04  115 img/s
+  [eval] step 1000: val IoU 0.3854 at threshold 0.009 (IoU 0.3486 at 0.5)  AP 0.4759
+  step 1050/3000  loss 0.1795  lr 3.87e-04  114 img/s
+  step 1100/3000  loss 0.1738  lr 3.75e-04  114 img/s
+  step 1150/3000  loss 0.1648  lr 3.63e-04  115 img/s
+  step 1200/3000  loss 0.1465  lr 3.50e-04  115 img/s
+  step 1250/3000  loss 0.1458  lr 3.38e-04  115 img/s
+  [eval] step 1250: val IoU 0.4415 at threshold 0.997 (IoU 0.2992 at 0.5)  AP 0.5681
+  step 1300/3000  loss 0.1455  lr 3.25e-04  114 img/s
+  step 1350/3000  loss 0.1353  lr 3.11e-04  114 img/s
+  step 1400/3000  loss 0.1242  lr 2.98e-04  115 img/s
+  step 1450/3000  loss 0.1194  lr 2.84e-04  115 img/s
+  step 1500/3000  loss 0.1115  lr 2.71e-04  115 img/s
+  [eval] step 1500: val IoU 0.5005 at threshold 0.020 (IoU 0.4592 at 0.5)  AP 0.7202
+  step 1550/3000  loss 0.1109  lr 2.57e-04  114 img/s
+  step 1600/3000  loss 0.1050  lr 2.43e-04  114 img/s
+  step 1650/3000  loss 0.1135  lr 2.29e-04  114 img/s
+  step 1700/3000  loss 0.1047  lr 2.16e-04  115 img/s
+  step 1750/3000  loss 0.1363  lr 2.02e-04  115 img/s
+  [eval] step 1750: val IoU 0.5000 at threshold 0.038 (IoU 0.4700 at 0.5)  AP 0.7132
+  step 1800/3000  loss 0.1098  lr 1.89e-04  114 img/s
+  step 1850/3000  loss 0.0997  lr 1.75e-04  114 img/s
+  step 1900/3000  loss 0.0993  lr 1.62e-04  114 img/s
+  step 1950/3000  loss 0.0947  lr 1.50e-04  115 img/s
+  step 2000/3000  loss 0.0941  lr 1.37e-04  115 img/s
+  [eval] step 2000: val IoU 0.4941 at threshold 0.144 (IoU 0.4880 at 0.5)  AP 0.7025
+  step 2050/3000  loss 0.0889  lr 1.25e-04  114 img/s
+  step 2100/3000  loss 0.0869  lr 1.13e-04  114 img/s
+  step 2150/3000  loss 0.0887  lr 1.02e-04  114 img/s
+  step 2200/3000  loss 0.0836  lr 9.11e-05  115 img/s
+  step 2250/3000  loss 0.0835  lr 8.07e-05  115 img/s
+  [eval] step 2250: val IoU 0.4802 at threshold 0.009 (IoU 0.4236 at 0.5)  AP 0.6757
+  step 2300/3000  loss 0.0814  lr 7.08e-05  114 img/s
+  step 2350/3000  loss 0.0802  lr 6.15e-05  114 img/s
+  step 2400/3000  loss 0.0766  lr 5.27e-05  114 img/s
+  step 2450/3000  loss 0.0764  lr 4.46e-05  115 img/s
+  step 2500/3000  loss 0.0738  lr 3.70e-05  115 img/s
+  [eval] step 2500: val IoU 0.4841 at threshold 0.022 (IoU 0.4587 at 0.5)  AP 0.6840
+  step 2550/3000  loss 0.0758  lr 3.01e-05  114 img/s
+  step 2600/3000  loss 0.0727  lr 2.39e-05  114 img/s
+  step 2650/3000  loss 0.0769  lr 1.84e-05  114 img/s
+  step 2700/3000  loss 0.0713  lr 1.35e-05  114 img/s
+  step 2750/3000  loss 0.0766  lr 9.43e-06  115 img/s
+  [eval] step 2750: val IoU 0.4866 at threshold 0.018 (IoU 0.4607 at 0.5)  AP 0.6849
+  step 2800/3000  loss 0.0745  lr 6.05e-06  114 img/s
+  step 2850/3000  loss 0.0720  lr 3.41e-06  114 img/s
+  step 2900/3000  loss 0.0712  lr 1.52e-06  114 img/s
+  step 2950/3000  loss 0.0715  lr 3.80e-07  114 img/s
+  step 3000/3000  loss 0.0741  lr 0.00e+00  115 img/s
+  [eval] step 3000: val IoU 0.4896 at threshold 0.015 (IoU 0.4600 at 0.5)  AP 0.6841
+  done in 7.0 min (best step 750, threshold 0.021): amazon_val IoU 0.5026 AP 0.7516  amazon_test IoU 0.4567 AP 0.7137  congo_test IoU 0.0719 AP 0.1970
+
+=== lrsearch_scratch_lr0.0005_f1_s0: 1515 training patches (9.8% of valid pixels cleared) ===
+  step 50/3000  loss 1.2577  lr 1.70e-04  117 img/s
+  step 100/3000  loss 0.8746  lr 3.37e-04  117 img/s
+  step 150/3000  loss 0.6817  lr 5.00e-04  117 img/s
+  step 200/3000  loss 0.6840  lr 5.00e-04  117 img/s
+  step 250/3000  loss 0.6477  lr 4.98e-04  117 img/s
+  [eval] step 250: val IoU 0.4201 at threshold 0.560 (IoU 0.4195 at 0.5)  AP 0.6812  (best so far)
+  step 300/3000  loss 0.6261  lr 4.97e-04  114 img/s
+  step 350/3000  loss 0.6091  lr 4.94e-04  114 img/s
+  step 400/3000  loss 0.6166  lr 4.91e-04  114 img/s
+  step 450/3000  loss 0.6331  lr 4.86e-04  115 img/s
+  step 500/3000  loss 0.5407  lr 4.82e-04  115 img/s
+  [eval] step 500: val IoU 0.3744 at threshold 0.012 (IoU 0.2624 at 0.5)  AP 0.5255
+  step 550/3000  loss 0.5306  lr 4.76e-04  113 img/s
+  step 600/3000  loss 0.5353  lr 4.70e-04  114 img/s
+  step 650/3000  loss 0.5023  lr 4.63e-04  114 img/s
+  step 700/3000  loss 0.5462  lr 4.55e-04  114 img/s
+  step 750/3000  loss 0.5027  lr 4.47e-04  114 img/s
+  [eval] step 750: val IoU 0.5137 at threshold 0.204 (IoU 0.5057 at 0.5)  AP 0.7739  (best so far)
+  step 800/3000  loss 0.5108  lr 4.39e-04  113 img/s
+  step 850/3000  loss 0.4942  lr 4.29e-04  114 img/s
+  step 900/3000  loss 0.5430  lr 4.19e-04  114 img/s
+  step 950/3000  loss 0.5065  lr 4.09e-04  114 img/s
+  step 1000/3000  loss 0.5223  lr 3.98e-04  114 img/s
+  [eval] step 1000: val IoU 0.3695 at threshold 0.001 (IoU 0.0099 at 0.5)  AP 0.4727
+  step 1050/3000  loss 0.4522  lr 3.87e-04  113 img/s
+  step 1100/3000  loss 0.5098  lr 3.75e-04  113 img/s
+  step 1150/3000  loss 0.4776  lr 3.63e-04  114 img/s
+  step 1200/3000  loss 0.5364  lr 3.50e-04  114 img/s
+  step 1250/3000  loss 0.4824  lr 3.38e-04  114 img/s
+  [eval] step 1250: val IoU 0.4827 at threshold 0.916 (IoU 0.4736 at 0.5)  AP 0.7466
+  step 1300/3000  loss 0.4730  lr 3.25e-04  113 img/s
+  step 1350/3000  loss 0.4888  lr 3.11e-04  114 img/s
+  step 1400/3000  loss 0.4733  lr 2.98e-04  114 img/s
+  step 1450/3000  loss 0.4749  lr 2.84e-04  114 img/s
+  step 1500/3000  loss 0.4754  lr 2.71e-04  114 img/s
+  [eval] step 1500: val IoU 0.3880 at threshold 0.099 (IoU 0.3802 at 0.5)  AP 0.5105
+  step 1550/3000  loss 0.4703  lr 2.57e-04  113 img/s
+  step 1600/3000  loss 0.4437  lr 2.43e-04  114 img/s
+  step 1650/3000  loss 0.4906  lr 2.29e-04  114 img/s
+  step 1700/3000  loss 0.4538  lr 2.16e-04  114 img/s
+  step 1750/3000  loss 0.4477  lr 2.02e-04  114 img/s
+  [eval] step 1750: val IoU 0.5727 at threshold 0.474 (IoU 0.5725 at 0.5)  AP 0.8061  (best so far)
+  step 1800/3000  loss 0.4526  lr 1.89e-04  113 img/s
+  step 1850/3000  loss 0.4351  lr 1.75e-04  113 img/s
+  step 1900/3000  loss 0.4291  lr 1.62e-04  114 img/s
+  step 1950/3000  loss 0.4336  lr 1.50e-04  114 img/s
+  step 2000/3000  loss 0.4632  lr 1.37e-04  114 img/s
+  [eval] step 2000: val IoU 0.5788 at threshold 0.033 (IoU 0.4632 at 0.5)  AP 0.8214  (best so far)
+  step 2050/3000  loss 0.4397  lr 1.25e-04  113 img/s
+  step 2100/3000  loss 0.4122  lr 1.13e-04  113 img/s
+  step 2150/3000  loss 0.4245  lr 1.02e-04  114 img/s
+  step 2200/3000  loss 0.4165  lr 9.11e-05  114 img/s
+  step 2250/3000  loss 0.4403  lr 8.07e-05  114 img/s
+  [eval] step 2250: val IoU 0.5665 at threshold 0.043 (IoU 0.4938 at 0.5)  AP 0.8142
+  step 2300/3000  loss 0.4304  lr 7.08e-05  113 img/s
+  step 2350/3000  loss 0.4320  lr 6.15e-05  113 img/s
+  step 2400/3000  loss 0.4117  lr 5.27e-05  114 img/s
+  step 2450/3000  loss 0.4209  lr 4.46e-05  114 img/s
+  step 2500/3000  loss 0.4325  lr 3.70e-05  114 img/s
+  [eval] step 2500: val IoU 0.5533 at threshold 0.104 (IoU 0.5206 at 0.5)  AP 0.8000
+  step 2550/3000  loss 0.3922  lr 3.01e-05  113 img/s
+  step 2600/3000  loss 0.4165  lr 2.39e-05  113 img/s
+  step 2650/3000  loss 0.3916  lr 1.84e-05  113 img/s
+  step 2700/3000  loss 0.3845  lr 1.35e-05  114 img/s
+  step 2750/3000  loss 0.4113  lr 9.43e-06  114 img/s
+  [eval] step 2750: val IoU 0.5960 at threshold 0.182 (IoU 0.5808 at 0.5)  AP 0.8346  (best so far)
+  step 2800/3000  loss 0.3759  lr 6.05e-06  113 img/s
+  step 2850/3000  loss 0.4071  lr 3.41e-06  113 img/s
+  step 2900/3000  loss 0.3977  lr 1.52e-06  113 img/s
+  step 2950/3000  loss 0.4108  lr 3.80e-07  113 img/s
+  step 3000/3000  loss 0.4136  lr 0.00e+00  114 img/s
+  [eval] step 3000: val IoU 0.5904 at threshold 0.315 (IoU 0.5865 at 0.5)  AP 0.8292
+  done in 7.1 min (best step 2750, threshold 0.182): amazon_val IoU 0.5960 AP 0.8346  amazon_test IoU 0.6301 AP 0.8684  congo_test IoU 0.2403 AP 0.2757
+
+All runs with tag lrsearch
+   init      lr  frac  seed  amazon_val_iou_t  amazon_test_iou_t  congo_test_iou_t  congo_test_ap
+scratch 0.00005  0.05     0           0.43970            0.44654           0.07066        0.14967
+scratch 0.00005  1.00     0           0.60397            0.62887           0.17977        0.26919
+scratch 0.00010  0.05     0           0.44117            0.42717           0.02471        0.12176
+scratch 0.00010  1.00     0           0.62204            0.60725           0.05738        0.17532
+scratch 0.00020  0.05     0           0.47975            0.42549           0.03760        0.16592
+scratch 0.00020  1.00     0           0.64466            0.65510           0.09436        0.17545
+scratch 0.00050  0.05     0           0.50258            0.45668           0.07190        0.19697
+scratch 0.00050  1.00     0           0.59603            0.63011           0.24034        0.27567

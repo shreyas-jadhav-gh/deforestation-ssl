@@ -225,4 +225,19 @@ checkpoints/
 results/previews/
 results/checkpoints/
 *.pt
-results/kaggle_*/
+
+# kept out of git: model files go in the GitHub release, local test runs and scratch folders stay local
+results/kaggle_v1/
+results/kaggle_v2/
+results/curves/
+results/hists/
+results/per_patch/
+results/pretrain/
+results/seg_results.csv
+results/smoke.csv
+results/demo/
+release/
+_to_delete/
+report_data/
+report_data.zip
+*.zip
