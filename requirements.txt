@@ -5,6 +5,3 @@ numpy
 pandas
 pyproj
 matplotlib
-
-# tests
-pytest

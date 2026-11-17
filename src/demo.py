@@ -37,7 +37,6 @@ from matplotlib.patches import Patch  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import common as C  # noqa: E402
-from forestwatch.metrics import ConfusionCounts  # noqa: E402
 from make_figures import INITS, INK, INK2, SURFACE  # noqa: E402
 from predict_examples import OUTCOME_CMAP, OUTCOMES, load_model, outcome_map, predict, rgb  # noqa: E402
 
@@ -83,10 +82,16 @@ def find_models(frac):
 
 def scores(prob, label, threshold):
     """Cleared-class metrics over all scored pixels of a set of patches."""
-    c = ConfusionCounts.from_probabilities(prob, label, threshold)
-    m = c.as_dict()
-    m["called_cleared"] = (c.tp + c.fp) / max(c.total, 1)
-    m["truly_cleared"] = (c.tp + c.fn) / max(c.total, 1)
+    scored = label != C.IGNORE
+    pred = (prob >= threshold) & scored
+    cleared = (label == 1) & scored
+    tp = np.sum(pred & cleared)
+    fp = np.sum(pred & ~cleared)
+    fn = np.sum(~pred & cleared)
+    tn = np.sum(scored) - tp - fp - fn
+    m = C.metrics_from_counts(tp, fp, fn, tn)
+    m["called_cleared"] = (tp + fp) / max(np.sum(scored), 1)
+    m["truly_cleared"] = (tp + fn) / max(np.sum(scored), 1)
     return m
 
 
