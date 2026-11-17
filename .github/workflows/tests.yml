@@ -1,0 +1,21 @@
+# Runs the unit tests on GitHub's servers after every push. The PyTorch tests are skipped there
+# (installing PyTorch takes minutes); run them locally with  python -m pytest.
+name: tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: pip install numpy pandas pytest
+      - run: python -m pytest -v

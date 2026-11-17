@@ -27,6 +27,7 @@ change-detection model. Results are checked against independent RADD radar alert
 - [Data](#data)
 - [Setup for the full pipeline](#setup-for-the-full-pipeline)
 - [Reproducing the results](#reproducing-the-results)
+- [The forestwatch toolkit and the tests](#the-forestwatch-toolkit-and-the-tests)
 - [Repository layout](#repository-layout)
 - [Data sources, credits and license](#data-sources-credits-and-license)
 
@@ -216,6 +217,44 @@ segmentation-models-pytorch 0.5.0.
 The spatial split uses seed 42. Fine-tuning uses seeds 0, 1 and 2, and the labeled subset for seed s is drawn with
 seed 1000 + s.
 
+## The forestwatch toolkit and the tests
+
+`src/forestwatch/` is a small Python package with the parts of the pipeline that need neither Earth Engine nor a GPU,
+written as classes and covered by unit tests. It is also the basis of our Python programming project.
+
+| Module | Classes |
+|---|---|
+| `config.py` | `Region` (a study area), `RunConfig` (the settings of one run, and its file name) |
+| `data.py` | `Patch`, `PatchCatalog`, `PatchLoader` with `InMemoryLoader` and `SharedCacheLoader`, `LabelBudget` |
+| `metrics.py` | `ConfusionCounts`, `ProbabilityHistogram` |
+| `results.py` | `RunResults` (the table of training runs and the comparisons in the report) |
+| `jobs.py` | `Step`, `Job`, `JobRunner`, `PartResult` (used by `run_jobs.py` on Kaggle) |
+| `cli.py` | the command line |
+
+Command line, from the repository root (only numpy and pandas needed):
+
+```
+python src/forestwatch regions                  # the four study regions
+python src/forestwatch patches --check          # what is in sample_data/, pixel counts rechecked
+python src/forestwatch budget                   # labeled patches at each label fraction
+python src/forestwatch results                  # mean Amazon test IoU per starting point and fraction
+python src/forestwatch results --cd             # the same for change detection
+python src/forestwatch rescore full_ssl4eo_lr0.0001_f0.05_s0   # recompute a run's scores from its histograms
+```
+
+`pip install -e .` installs the package, after which the same commands work as `forestwatch regions` and so on.
+
+Tests (73; the 6 that need PyTorch are skipped without it):
+
+```
+pip install pytest
+python -m pytest                # or, with nothing extra installed:  python -m unittest -v
+```
+
+Besides small synthetic cases, the tests check the package against the original helper functions in `common.py`,
+check every sample patch against its manifest, and recompute the tuned threshold, IoU and average precision of
+every saved run from its stored histograms. They run on GitHub after every push (`.github/workflows/tests.yml`).
+
 ## Repository layout
 
 ```
@@ -229,11 +268,13 @@ src/
   validate_alerts.py     labels and predictions against RADD radar alerts
   analyse_results.py     same-pixel comparison and haze analysis
   demo.py                quick demo of the trained models on the sample patches
+  forestwatch/           the Python toolkit: classes for regions, runs, patches, metrics, results, jobs; CLI
   dataprep/
     patches.py           grid, Hansen labels, spatial splits, labeled patch downloads (Earth Engine)
     unlabeled.py         unlabeled patches for pretraining
     alerts.py            RADD alerts for the test patches
     pack.py              zips the data for upload to Kaggle
+tests/                   unit tests (pytest or unittest)
 notebooks/
   kaggle_job.ipynb       the Kaggle notebook that runs one job
 sample_data/             16 labeled test patches for the demo

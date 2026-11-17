@@ -241,3 +241,6 @@ _to_delete/
 report_data/
 report_data.zip
 *.zip
+
+# report files saved by the Claude app (submitted separately, not part of the code)
+Claude outputs/
